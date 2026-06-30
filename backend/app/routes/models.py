@@ -37,7 +37,7 @@ async def create_model(
         provider=model.provider,
         model_type=model.model_type,
         version=model.version,
-        metadata=model.metadata,
+        metadata=model.meta_data,
         created_by=current_user.user_id
     )
     db.add(new_model)

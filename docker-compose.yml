@@ -1,86 +1,79 @@
-version: '3.8'
+# docker-compose.yml
+# No 'version:' field — Docker Compose v2
 
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: secos-postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER:     secos_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB:       ai_secos_db
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      # Use pg_isready with explicit credentials — avoids false unhealthy
+      test: ["CMD-SHELL", "pg_isready -U secos_user -d ai_secos_db -h 127.0.0.1"]
       interval: 10s
       timeout: 5s
-      retries: 5
-    networks:
-      - secos-network
+      retries: 10
+      start_period: 15s
 
   neo4j:
-    image: neo4j:5.11-community
-    container_name: secos-neo4j
+    image: neo4j:5-community
+    restart: unless-stopped
     environment:
-      NEO4J_AUTH: ${NEO4J_AUTH}
-      NEO4J_PLUGINS: '["graph-algorithms"]'
-      NEO4J_dbms_security_procedures_unrestricted: algo.*
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD}
     ports:
-      - "7687:7687"
-      - "7474:7474"
+      - "7474:7474"   # browser UI
+      - "7687:7687"   # bolt
     volumes:
-      - neo4j_data:/var/lib/neo4j/data
-      - neo4j_logs:/var/lib/neo4j/logs
+      - neo4j_data:/data
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:7474"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - secos-network
+      # HTTP check against the status endpoint — no password required
+      test: ["CMD-SHELL", "wget -qO- http://localhost:7474 > /dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: secos-backend
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: ${POSTGRES_PORT}
-      NEO4J_AUTH: ${NEO4J_AUTH}
-      NEO4J_HOST: neo4j
-      NEO4J_PORT: ${NEO4J_PORT}
-      FASTAPI_ENV: ${FASTAPI_ENV}
-      SECRET_KEY: ${SECRET_KEY}
-      JWT_ALGORITHM: ${JWT_ALGORITHM}
-      JWT_EXPIRATION_HOURS: ${JWT_EXPIRATION_HOURS}
+      POSTGRES_HOST:        postgres
+      POSTGRES_PORT:        5432
+      POSTGRES_USER:        secos_user
+      POSTGRES_PASSWORD:    ${DB_PASSWORD}
+      POSTGRES_DB:          ai_secos_db
+      NEO4J_HOST:           neo4j
+      NEO4J_PORT:           7687
+      NEO4J_AUTH:           neo4j/nFhI0pNcrBNV3Rt8dnd+kKsEQW6B6uZRbRy87ENi0iI=
+      SECRET_KEY:           ${SECRET_KEY}
+      JWT_ALGORITHM:        HS256
+      JWT_EXPIRATION_HOURS: 24
     ports:
       - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
       neo4j:
-        condition: service_healthy
+        condition: service_started   # healthy takes too long; app retries anyway
     volumes:
       - ./backend:/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-    networks:
-      - secos-network
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: secos-frontend
+    restart: unless-stopped
     environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-      NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME}
+      NEXT_PUBLIC_API_URL: http://192.168.116.159:8000
     ports:
       - "3000:3000"
     depends_on:
@@ -88,15 +81,8 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    command: npm run dev
-    networks:
-      - secos-network
+      - /app/.next
 
 volumes:
   postgres_data:
   neo4j_data:
-  neo4j_logs:
-
-networks:
-  secos-network:
-    driver: bridge

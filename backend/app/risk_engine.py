@@ -1,121 +1,176 @@
 from decimal import Decimal
 from typing import Dict, Any, Optional
-from uuid import UUID
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 class RiskEngine:
-    """Simple risk scoring engine for assets."""
+    """
+    Dynamic risk scoring engine v2.
 
-    # Risk factor weights (total = 100)
+    Factors
+    -------
+    data_sensitivity   (0-100)  – how sensitive the data is
+    permission_level   (0-100)  – how broad the access permissions are
+    trust_score        (0-100)  – higher trust = lower risk (inverted internally)
+    policy_gap         (0-100)  – driven by recent denial events (0 = well covered)
+    environment        str      – production/staging/development/testing
+    deny_event_count   int      – recent denial events (last 24h) for this asset
+    asset_type         str      – database/api/storage/server/other
+    """
+
     WEIGHTS = {
-        "data_sensitivity": 0.30,      # 30%
-        "permission_level": 0.25,      # 25%
-        "trust_score": 0.20,           # 20%
-        "environment": 0.15,           # 15%
-        "policy_gap": 0.10             # 10%
+        "data_sensitivity": 0.28,
+        "permission_level": 0.22,
+        "trust_score":      0.18,
+        "policy_gap":       0.18,   # bumped; now driven by live deny events
+        "deny_events":      0.14,   # new — live signal
     }
 
-    # Environment multipliers
     ENV_MULTIPLIERS = {
-        "production": 1.0,
-        "staging": 0.7,
+        "production":  1.0,
+        "staging":     0.7,
         "development": 0.3,
-        "testing": 0.2
+        "testing":     0.2,
     }
 
-    # Severity thresholds
+    # Baseline data-sensitivity by asset type (applied when sensitivity=0)
+    ASSET_TYPE_SENSITIVITY = {
+        "database": 70,
+        "api":      50,
+        "storage":  55,
+        "server":   35,
+        "other":    20,
+    }
+
     SEVERITY_THRESHOLDS = {
         "critical": 80.0,
-        "high": 60.0,
-        "medium": 40.0,
-        "low": 20.0,
-        "minimal": 0.0
+        "high":     60.0,
+        "medium":   40.0,
+        "low":      20.0,
+        "minimal":  0.0,
     }
 
     @staticmethod
     def calculate_risk_score(
-        data_sensitivity: int,      # 0-100
-        permission_level: int,      # 0-100
-        trust_score: int,           # 0-100
+        data_sensitivity: int = 0,
+        permission_level: int = 0,
+        trust_score: int = 50,
         environment: str = "production",
-        policy_gap: int = 0         # 0-100
+        policy_gap: int = 0,
+        deny_event_count: int = 0,
+        asset_type: str = "other",
     ) -> Dict[str, Any]:
-        """
-        Calculate risk score for an asset based on multiple factors.
-
-        Returns:
-            Dictionary with score, severity, and recommendation
-        """
         try:
-            # Normalize values to 0-100 range if needed
-            data_sensitivity = min(100, max(0, data_sensitivity))
-            permission_level = min(100, max(0, permission_level))
-            trust_score = 100 - min(100, max(0, trust_score))  # Invert trust (lower trust = higher risk)
-            policy_gap = min(100, max(0, policy_gap))
+            # Apply asset-type baseline if caller passes 0
+            if data_sensitivity == 0:
+                data_sensitivity = RiskEngine.ASSET_TYPE_SENSITIVITY.get(
+                    asset_type.lower(), 20
+                )
 
-            # Calculate weighted score
+            ds  = min(100, max(0, data_sensitivity))
+            pl  = min(100, max(0, permission_level))
+            ts  = 100 - min(100, max(0, trust_score))   # invert
+            pg  = min(100, max(0, policy_gap))
+            # map deny count → 0-100; cap at 20 events = 100
+            de  = min(100, deny_event_count * 5)
+
             score = (
-                data_sensitivity * RiskEngine.WEIGHTS["data_sensitivity"] +
-                permission_level * RiskEngine.WEIGHTS["permission_level"] +
-                trust_score * RiskEngine.WEIGHTS["trust_score"] +
-                policy_gap * RiskEngine.WEIGHTS["policy_gap"]
+                ds  * RiskEngine.WEIGHTS["data_sensitivity"]
+                + pl  * RiskEngine.WEIGHTS["permission_level"]
+                + ts  * RiskEngine.WEIGHTS["trust_score"]
+                + pg  * RiskEngine.WEIGHTS["policy_gap"]
+                + de  * RiskEngine.WEIGHTS["deny_events"]
             )
 
-            # Apply environment multiplier
-            env_multiplier = RiskEngine.ENV_MULTIPLIERS.get(environment.lower(), 1.0)
-            score = score * env_multiplier
+            env_mult = RiskEngine.ENV_MULTIPLIERS.get(environment.lower(), 1.0)
+            score = score * env_mult
 
-            # Determine severity
             severity = "minimal"
             for sev, threshold in RiskEngine.SEVERITY_THRESHOLDS.items():
                 if score >= threshold:
                     severity = sev
                     break
 
-            # Generate recommendation
             recommendation = RiskEngine._generate_recommendation(
-                score, severity, data_sensitivity, permission_level, policy_gap
+                score, severity, ds, pl, pg, de, asset_type
             )
 
             return {
-                "score": float(round(Decimal(str(score)), 2)),
-                "severity": severity,
-                "data_sensitivity": data_sensitivity,
-                "permission_level": permission_level,
-                "trust_score": 100 - trust_score,  # Return original trust score
-                "environment": environment,
-                "policy_gap": policy_gap,
-                "recommendation": recommendation
+                "score":            float(round(Decimal(str(score)), 2)),
+                "severity":         severity,
+                "data_sensitivity": ds,
+                "permission_level": pl,
+                "trust_score":      100 - ts,   # return original
+                "environment":      environment,
+                "policy_gap":       pg,
+                "deny_event_count": deny_event_count,
+                "recommendation":   recommendation,
             }
-
         except Exception as e:
-            logger.error(f"Error calculating risk score: {e}")
+            logger.error(f"RiskEngine.calculate_risk_score: {e}")
             return {
                 "score": 0.0,
                 "severity": "minimal",
-                "recommendation": "Unable to calculate risk score"
+                "recommendation": "Unable to calculate risk score",
             }
 
     @staticmethod
-    def _generate_recommendation(score: float, severity: str, data_sensitivity: int, permission_level: int, policy_gap: int) -> str:
-        """Generate a recommendation based on risk factors."""
-        recommendations = []
+    def _generate_recommendation(
+        score: float,
+        severity: str,
+        data_sensitivity: int,
+        permission_level: int,
+        policy_gap: int,
+        deny_event_score: int,
+        asset_type: str,
+    ) -> str:
+        recs = []
 
         if data_sensitivity > 70:
-            recommendations.append("Review data access controls for high-sensitivity data")
-
+            recs.append("Review data access controls for high-sensitivity data")
         if permission_level > 70:
-            recommendations.append("Reduce permission levels for this asset")
-
+            recs.append("Reduce permission levels for this asset")
         if policy_gap > 50:
-            recommendations.append("Create or update policies for this asset")
+            recs.append("Create or update policies — recent denial spike detected")
+        if deny_event_score > 60:
+            recs.append("Investigate repeated access denials — possible intrusion attempt")
+
+        if asset_type.lower() == "database" and score > 40:
+            recs.append("Apply database-level row security and connection limits")
+        if asset_type.lower() == "api" and score > 40:
+            recs.append("Enforce rate limits and token scoping on this API")
 
         if severity == "critical":
-            recommendations.append("URGENT: Immediate security review required")
+            recs.insert(0, "🚨 URGENT: Immediate security review required")
         elif severity == "high":
-            recommendations.append("Schedule security assessment within 7 days")
+            recs.insert(0, "⚠ Schedule security assessment within 7 days")
 
-        return " | ".join(recommendations) if recommendations else "Monitor this asset for security changes"
+        return " | ".join(recs) if recs else "Monitor this asset for security changes"
+
+    @staticmethod
+    def score_from_asset_context(
+        asset_type: str,
+        environment: str,
+        deny_event_count: int = 0,
+        has_policy: bool = True,
+    ) -> Dict[str, Any]:
+        """
+        Convenience scorer that derives all factors from asset context.
+        Used by the seed script and the auto-recalculate endpoint.
+        """
+        sensitivity = RiskEngine.ASSET_TYPE_SENSITIVITY.get(asset_type.lower(), 20)
+        policy_gap  = 0 if has_policy else 60
+        trust_score = 70 if has_policy else 40
+        perm_level  = 60 if asset_type.lower() in ("database", "api") else 30
+
+        return RiskEngine.calculate_risk_score(
+            data_sensitivity=sensitivity,
+            permission_level=perm_level,
+            trust_score=trust_score,
+            environment=environment,
+            policy_gap=policy_gap,
+            deny_event_count=deny_event_count,
+            asset_type=asset_type,
+        )

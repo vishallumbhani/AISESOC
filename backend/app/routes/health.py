@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from app.database import SessionLocal
 from app.graph import get_graph_db
+from sqlalchemy import text
 
 router = APIRouter(tags=["health"])
 
@@ -11,7 +12,7 @@ async def health_check():
     try:
         # Test database connection
         db = SessionLocal()
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
         db.close()
         db_status = "healthy"
     except Exception as e:
