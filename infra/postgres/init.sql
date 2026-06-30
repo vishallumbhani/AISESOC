@@ -1,3 +1,11 @@
+-- ============================================================
+-- LEGACY FILE — for reference only.
+-- This was the original bootstrap schema before Alembic was
+-- introduced. The Alembic migrations in backend/app/alembic/versions/
+-- are now the source of truth for the database schema.
+-- This file is NOT executed automatically and may be out of date.
+-- ============================================================
+
 -- Create extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
