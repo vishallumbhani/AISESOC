@@ -52,7 +52,7 @@ services:
       POSTGRES_DB:          ai_secos_db
       NEO4J_HOST:           neo4j
       NEO4J_PORT:           7687
-      NEO4J_AUTH:           neo4j/nFhI0pNcrBNV3Rt8dnd+kKsEQW6B6uZRbRy87ENi0iI=
+      NEO4J_AUTH:           neo4j/${NEO4J_PASSWORD}
       SECRET_KEY:           ${SECRET_KEY}
       JWT_ALGORITHM:        HS256
       JWT_EXPIRATION_HOURS: 24

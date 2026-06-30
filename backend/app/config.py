@@ -11,7 +11,7 @@ class Settings(BaseSettings):
 
     # Database
     postgres_user: str = os.getenv("POSTGRES_USER", "secos_user")
-    postgres_password: str = os.getenv("POSTGRES_PASSWORD", "secos_password")
+    postgres_password: str = os.getenv("POSTGRES_PASSWORD", "")
     postgres_host: str = os.getenv("POSTGRES_HOST", "localhost")
     postgres_port: int = int(os.getenv("POSTGRES_PORT", 5432))
     postgres_db: str = os.getenv("POSTGRES_DB", "ai_secos_db")
