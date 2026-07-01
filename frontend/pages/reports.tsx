@@ -1,252 +1,260 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import orgApi from "../lib/orgApi";
 import { getOrgToken } from "../lib/tokens";
 import {
   FiBarChart2, FiDownload, FiPlay, FiRefreshCw,
-  FiCheckCircle, FiAlertTriangle, FiShield, FiX, FiLoader,
+  FiCheckCircle, FiAlertTriangle, FiShield, FiX,
+  FiInfo, FiChevronDown, FiChevronUp,
 } from "react-icons/fi";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const FRAMEWORKS = [
-  { id: "SOC2",        name: "SOC 2 Type II",                     color: "text-blue-600",   bg: "bg-blue-900/20 border-blue-800/60" },
-  { id: "ISO27001",    name: "ISO/IEC 27001:2022",                color: "text-purple-600", bg: "bg-purple-900/20 border-purple-800/60" },
-  { id: "NIST_AI_RMF", name: "NIST AI Risk Management Framework", color: "text-teal-600",   bg: "bg-teal-900/20 border-teal-800/60" },
-  { id: "OWASP_LLM",  name: "OWASP LLM Top 10",                  color: "text-orange-600", bg: "bg-orange-900/20 border-orange-800/60" },
+  { id: "SOC2",        name: "SOC 2 Type II",                      controls: 3 },
+  { id: "ISO27001",    name: "ISO/IEC 27001:2022",                 controls: 3 },
+  { id: "NIST_AI_RMF", name: "NIST AI Risk Management Framework",  controls: 3 },
+  { id: "OWASP_LLM",   name: "OWASP LLM Top 10",                   controls: 3 },
 ];
 
-/**
- * CSV download using fetch() with Authorization header.
- * Axios causes CORS preflight failures on streaming responses.
- * fetch() with credentials in headers bypasses this cleanly.
- */
-async function downloadCsvFile(url: string, filename: string): Promise<string | null> {
-  const token = getOrgToken();
-  try {
-    const res = await fetch(`${BASE}/api/v1${url}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "text/csv",
-      },
-    });
-    if (!res.ok) {
-      const text = await res.text();
-      return `Download failed: ${res.status} — ${text.slice(0, 200)}`;
-    }
-    const blob = await res.blob();
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(a.href);
-    return null; // success
-  } catch (e: any) {
-    return `Download error: ${e.message}`;
-  }
-}
+const STATUS_STYLE: Record<string, string> = {
+  PASS:          "bg-green-50 text-green-700 border-green-200",
+  PARTIAL:       "bg-amber-50 text-amber-700 border-amber-200",
+  NEEDS_REVIEW:  "bg-red-50 text-red-700 border-red-200",
+};
 
 const Reports: React.FC = () => {
   const router = useRouter();
-  const [tab, setTab]               = useState<"executive" | "compliance">("executive");
-  const [days, setDays]             = useState(30);
-  const [execReport, setExecReport] = useState<any>(null);
-  const [summary, setSummary]       = useState<any[]>([]);
-  const [generating, setGenerating] = useState(false);
+  const [tab, setTab]                 = useState<"executive"|"compliance">("executive");
+  const [days, setDays]               = useState(30);
+  const [execReport, setExecReport]   = useState<any>(null);
+  const [summary, setSummary]         = useState<any[]>([]);
+  const [generating, setGenerating]   = useState(false);
+  const [loading, setLoading]         = useState(true);
+  const [error, setError]             = useState<string | null>(null);
+  const [success, setSuccess]         = useState<string | null>(null);
   const [downloading, setDownloading] = useState<string | null>(null);
-  const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState<string | null>(null);
+
+  // Per-framework detail (controls + rationale) loaded on expand
+  const [expanded, setExpanded]   = useState<string | null>(null);
+  const [detail, setDetail]       = useState<Record<string, any>>({});
+  const [detailLoading, setDetailLoading] = useState<string | null>(null);
+  const [methodology, setMethodology]     = useState<Record<string, any>>({});
+  const [showMethodology, setShowMethodology] = useState<string | null>(null);
 
   useEffect(() => {
     if (!getOrgToken()) { router.push("/login"); return; }
     loadSummary();
   }, []);
 
-  const loadSummary = useCallback(async () => {
+  const loadSummary = async () => {
     setLoading(true);
     try {
       const r = await orgApi.get("/reports/summary");
       setSummary(r.data.frameworks || []);
     } catch {
-      setSummary(FRAMEWORKS.map(f => ({ framework: f.id, score_pct: 0, passed: 0, total_controls: 3 })));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      setSummary(FRAMEWORKS.map(f => ({ framework: f.id, score_pct: 0, passed: 0, total_controls: 0 })));
+    } finally { setLoading(false); }
+  };
 
   const generateExec = async () => {
-    setGenerating(true);
-    setError(null);
+    setGenerating(true); setError(null);
     try {
       const r = await orgApi.get(`/reports/executive?days=${days}`);
       setExecReport(r.data);
+    } catch {
+      setError("Failed to generate executive report.");
+    } finally { setGenerating(false); }
+  };
+
+  // ── Fixed: CSV download via fetch() with Authorization header.
+  // Axios + blob + custom auth interceptor triggers CORS preflight
+  // failures on file-download responses in this deployment — fetch()
+  // with a manually attached header avoids that entirely.
+  const downloadCsv = async (type: string) => {
+    setDownloading(type); setError(null);
+    try {
+      const token = getOrgToken();
+      if (!token) { router.push("/login"); return; }
+
+      const url = type === "executive"
+        ? `${BASE}/api/v1/reports/executive?days=${days}&format=csv`
+        : `${BASE}/api/v1/reports/compliance/${type}?days=${days}&format=csv`;
+
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        const body = await res.text().catch(() => "");
+        throw new Error(`HTTP ${res.status}${body ? `: ${body.slice(0, 150)}` : ""}`);
+      }
+
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = `${type}_report_${days}d.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(objectUrl);
+
+      setSuccess(`${type === "executive" ? "Executive" : type} report downloaded.`);
+      setTimeout(() => setSuccess(null), 3000);
     } catch (e: any) {
-      setError(e.response?.data?.detail || "Failed to generate executive report.");
+      setError(`Download failed: ${e.message || "Network error — check backend connectivity."}`);
     } finally {
-      setGenerating(false);
+      setDownloading(null);
     }
   };
 
-  const handleDownload = async (type: string) => {
-    setDownloading(type);
-    setError(null);
-    const url = type === "executive"
-      ? `/reports/executive?days=${days}&format=csv`
-      : `/reports/compliance/${type}?days=${days}&format=csv`;
-    const filename = `${type}_report_${days}d.csv`;
-    const err = await downloadCsvFile(url, filename);
-    if (err) setError(err);
-    setDownloading(null);
+  const toggleExpand = async (fwId: string) => {
+    if (expanded === fwId) { setExpanded(null); return; }
+    setExpanded(fwId);
+    if (!detail[fwId]) {
+      setDetailLoading(fwId);
+      try {
+        const r = await orgApi.get(`/reports/compliance/${fwId}?days=${days}`);
+        setDetail(prev => ({ ...prev, [fwId]: r.data }));
+      } catch {
+        setDetail(prev => ({ ...prev, [fwId]: { error: "Failed to load control detail." } }));
+      } finally {
+        setDetailLoading(null);
+      }
+    }
   };
 
-  const ScoreBadge = ({ pct }: { pct: number }) => {
-    const color = pct >= 80 ? "text-green-600" : pct >= 60 ? "text-amber-600" : "text-red-600";
-    const bar   = pct >= 80 ? "bg-green-500"   : pct >= 60 ? "bg-yellow-500"   : "bg-red-500";
-    return (
-      <div className="text-right">
-        <p className={`text-2xl font-bold ${color}`}>{pct}%</p>
-        <div className="w-20 bg-slate-100 rounded-full h-1 mt-1 ml-auto">
-          <div className={`h-1 rounded-full ${bar}`} style={{ width: `${pct}%` }} />
-        </div>
-      </div>
-    );
+  const toggleMethodology = async (fwId: string) => {
+    if (showMethodology === fwId) { setShowMethodology(null); return; }
+    setShowMethodology(fwId);
+    if (!methodology[fwId]) {
+      try {
+        const r = await orgApi.get(`/reports/compliance/${fwId}/methodology`);
+        setMethodology(prev => ({ ...prev, [fwId]: r.data }));
+      } catch {
+        setMethodology(prev => ({ ...prev, [fwId]: { error: "Failed to load methodology." } }));
+      }
+    }
   };
 
   return (
     <>
       <Head><title>Reports — AI-SecOS</title></Head>
-      <main className="min-h-screen py-8">
-        <div className="max-w-6xl mx-auto px-4">
+      <main className="min-h-screen" style={{ background: "#F8FAFC" }}>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
           {/* Header */}
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center">
-              <FiBarChart2 className="w-5 h-5 text-slate-900" />
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center">
+              <FiBarChart2 className="w-5 h-5 text-white" />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">Reports</h1>
-              <p className="text-slate-400 text-xs mt-0.5">Executive summaries and compliance evidence</p>
-            </div>
+            <h1 className="text-2xl font-bold text-slate-900">Reports</h1>
           </div>
+          <p className="text-slate-500 text-sm mb-6 ml-12">Executive summaries and compliance evidence.</p>
 
-          {/* Error */}
+          {/* Alerts */}
           {error && (
-            <div className="mb-4 flex items-start gap-2 bg-red-900/30 border border-red-700 text-red-300 rounded-xl px-4 py-3 text-sm">
-              <FiAlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <div className="mb-4 flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
+              <FiAlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5"/>
               <span className="flex-1">{error}</span>
-              <button onClick={() => setError(null)}><FiX className="w-4 h-4 opacity-60 hover:opacity-100" /></button>
+              <button onClick={() => setError(null)}><FiX className="w-4 h-4"/></button>
+            </div>
+          )}
+          {success && (
+            <div className="mb-4 flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 text-sm">
+              <FiCheckCircle className="w-4 h-4 flex-shrink-0"/>
+              <span className="flex-1">{success}</span>
+              <button onClick={() => setSuccess(null)}><FiX className="w-4 h-4"/></button>
             </div>
           )}
 
-          {/* Period + Tabs bar */}
-          <div className="bg-white border border-slate-200 rounded-xl px-5 py-3 mb-5 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex border-b border-transparent gap-1">
-              {[
-                { id: "executive",  label: "Executive Report" },
-                { id: "compliance", label: "Compliance Reports" },
-              ].map(t => (
-                <button key={t.id} onClick={() => setTab(t.id as any)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    tab === t.id
-                      ? "bg-indigo-600 text-slate-900"
-                      : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
-                  }`}>{t.label}</button>
-              ))}
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-400">Period:</span>
-              {[7, 30, 90].map(d => (
-                <button key={d} onClick={() => setDays(d)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                    days === d ? "bg-indigo-600 text-slate-900" : "bg-slate-100 text-slate-500 hover:bg-slate-200 border border-slate-200"
-                  }`}>{d}d</button>
-              ))}
-            </div>
+          {/* Period selector */}
+          <div className="flex items-center gap-3 mb-5">
+            <span className="text-sm text-slate-500">Report period:</span>
+            {[7, 30, 90].map(d => (
+              <button key={d} onClick={() => setDays(d)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
+                  days === d
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-white text-slate-600 border-slate-300 hover:border-blue-400"
+                }`}>{d}d</button>
+            ))}
           </div>
 
-          {/* ── Executive Report ── */}
+          {/* Tabs */}
+          <div className="flex border-b border-slate-200 mb-6">
+            {[
+              { id: "executive",  label: "Executive Report" },
+              { id: "compliance", label: "Compliance Reports" },
+            ].map(t => (
+              <button key={t.id} onClick={() => setTab(t.id as any)}
+                className={`px-5 py-3 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                  tab === t.id ? "border-blue-600 text-blue-600" : "border-transparent text-slate-500 hover:text-slate-800"
+                }`}>{t.label}</button>
+            ))}
+          </div>
+
+          {/* ── Executive Report ────────────────────────────────── */}
           {tab === "executive" && (
             <div className="space-y-5">
-              <div className="bg-white border border-slate-200 rounded-xl p-5">
-                <div className="flex items-center justify-between mb-5">
+              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h2 className="font-bold text-slate-900 text-lg">Executive Security Report</h2>
-                    <p className="text-slate-500 text-sm">Blocked requests, incidents, and risk posture — last {days} days</p>
+                    <h2 className="font-bold text-slate-900">Executive Security Report</h2>
+                    <p className="text-slate-500 text-sm">Blocked requests, incidents, risk posture for last {days} days</p>
                   </div>
                   <div className="flex gap-2">
                     {execReport && (
-                      <button
-                        onClick={() => handleDownload("executive")}
-                        disabled={downloading === "executive"}
-                        className="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 text-slate-600 hover:text-slate-900 rounded-lg text-sm disabled:opacity-50"
-                      >
+                      <button onClick={() => downloadCsv("executive")} disabled={downloading === "executive"}
+                        className="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-300 text-slate-600 hover:text-slate-900 hover:border-slate-400 disabled:opacity-50 rounded-lg text-sm transition-colors">
                         {downloading === "executive"
-                          ? <div className="w-3.5 h-3.5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                          : <FiDownload className="w-3.5 h-3.5" />}
+                          ? <div className="w-3.5 h-3.5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"/>
+                          : <FiDownload className="w-3.5 h-3.5"/>}
                         CSV
                       </button>
                     )}
                     <button onClick={generateExec} disabled={generating}
-                      className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-slate-900 rounded-lg text-sm font-medium">
+                      className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
                       {generating
-                        ? <><div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> Generating…</>
-                        : <><FiPlay className="w-3.5 h-3.5" /> Generate</>}
+                        ? <><div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"/> Generating…</>
+                        : <><FiPlay className="w-3.5 h-3.5"/> Generate</>}
                     </button>
                   </div>
                 </div>
 
                 {!execReport ? (
-                  <div className="border border-dashed border-slate-200 rounded-xl p-10 text-center">
-                    <FiBarChart2 className="w-12 h-12 text-gray-700 mx-auto mb-3" />
-                    <p className="text-slate-400 font-medium">Click Generate to create the executive report</p>
-                    <p className="text-slate-500 text-sm mt-1">Analyzes runtime events, incidents, and risk scores</p>
+                  <div className="border border-dashed border-slate-300 rounded-xl p-8 text-center">
+                    <FiBarChart2 className="w-10 h-10 text-slate-300 mx-auto mb-3"/>
+                    <p className="text-slate-400">Click Generate to create the executive report</p>
                   </div>
                 ) : (
-                  <div className="space-y-5">
-                    {/* KPI grid */}
-                    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {[
-                        { label: "Total Requests",   value: execReport.summary?.total_requests    ?? execReport.total_events ?? 0,   color: "text-blue-600" },
-                        { label: "Blocked",          value: execReport.summary?.blocked_requests  ?? execReport.deny_events  ?? 0,   color: "text-red-600" },
-                        { label: "Block Rate",       value: `${execReport.summary?.block_rate_pct ?? execReport.deny_rate ?? 0}%`,   color: "text-orange-600" },
-                        { label: "Open Incidents",   value: execReport.summary?.open_incidents    ?? execReport.open_incidents ?? 0, color: "text-amber-600" },
-                        { label: "High Risk Assets", value: execReport.summary?.high_risk_assets  ?? 0,                             color: "text-red-600" },
-                        { label: "Period",           value: `${execReport.period_days ?? days} days`,                               color: "text-slate-500" },
+                        { label:"Total Requests",   value: execReport.total_events ?? execReport.summary?.total_requests,    color:"text-blue-600" },
+                        { label:"Blocked",          value: execReport.deny_events ?? execReport.summary?.blocked_requests,   color:"text-red-600" },
+                        { label:"Deny Rate",        value:`${execReport.deny_rate_pct ?? execReport.summary?.block_rate_pct ?? 0}%`, color:"text-orange-600" },
+                        { label:"Open Incidents",   value: execReport.open_incidents ?? execReport.summary?.open_incidents,  color:"text-amber-600" },
+                        { label:"Total Agents",     value: execReport.total_agents,  color:"text-slate-700" },
+                        { label:"Period",           value:`${execReport.period_days} days`, color:"text-slate-500" },
                       ].map(s => (
-                        <div key={s.label} className="bg-white border border-slate-200 rounded-xl p-4 text-center">
-                          <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
-                          <p className="text-xs text-slate-400 mt-0.5">{s.label}</p>
+                        <div key={s.label} className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center">
+                          <p className={`text-2xl font-bold ${s.color}`}>{s.value ?? 0}</p>
+                          <p className="text-xs text-slate-500 mt-0.5">{s.label}</p>
                         </div>
                       ))}
                     </div>
 
-                    {/* Top agents */}
-                    {(execReport.top_violating_agents?.length > 0 || execReport.top_agents?.length > 0) && (
+                    {execReport.top_violating_agents?.length > 0 && (
                       <div>
-                        <p className="text-xs text-slate-400 uppercase font-semibold mb-2 tracking-wide">Top Violating Agents</p>
+                        <p className="text-xs text-slate-500 uppercase font-semibold mb-2 tracking-wide">Top Violating Agents</p>
                         <div className="space-y-1.5">
-                          {(execReport.top_violating_agents || execReport.top_agents || []).map((a: any, i: number) => (
-                            <div key={i} className="flex items-center justify-between bg-white border border-slate-200 rounded-lg px-4 py-2.5">
-                              <span className="text-sm text-slate-900">🤖 {a.agent || a.agent_name}</span>
-                              <span className="text-sm font-bold text-red-600">{a.deny_count ?? a.incidents} denials</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Top assets */}
-                    {execReport.top_assets?.length > 0 && (
-                      <div>
-                        <p className="text-xs text-slate-400 uppercase font-semibold mb-2 tracking-wide">Top Targeted Assets</p>
-                        <div className="space-y-1.5">
-                          {execReport.top_assets.map((a: any, i: number) => (
-                            <div key={i} className="flex items-center justify-between bg-white border border-slate-200 rounded-lg px-4 py-2.5">
-                              <span className="text-sm text-slate-900">🗄️ {a.asset || a.asset_name}</span>
-                              <span className="text-sm font-bold text-orange-600">{a.deny_count ?? a.incidents} events</span>
+                          {execReport.top_violating_agents.map((a: any) => (
+                            <div key={a.agent} className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5">
+                              <span className="text-sm text-slate-800">🤖 {a.agent}</span>
+                              <span className="text-sm font-bold text-red-600">{a.deny_count} denials</span>
                             </div>
                           ))}
                         </div>
@@ -258,84 +266,143 @@ const Reports: React.FC = () => {
             </div>
           )}
 
-          {/* ── Compliance Reports ── */}
+          {/* ── Compliance Reports ──────────────────────────────── */}
           {tab === "compliance" && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="text-slate-500 text-sm">Compliance scores based on live runtime, policy, and incident data.</p>
-                <button onClick={loadSummary}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-500 hover:text-slate-900 rounded-lg text-xs">
-                  <FiRefreshCw className="w-3.5 h-3.5" /> Refresh
-                </button>
-              </div>
-
               {loading ? (
                 <div className="flex justify-center py-20">
-                  <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"/>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {FRAMEWORKS.map(fw => {
                     const s = summary.find(x => x.framework === fw.id);
-                    const pct = s?.score_pct ?? 0;
-                    const isDownloading = downloading === fw.id;
+                    const isExpanded = expanded === fw.id;
+                    const d = detail[fw.id];
+                    const isMethodOpen = showMethodology === fw.id;
+                    const m = methodology[fw.id];
+
                     return (
-                      <div key={fw.id} className={`border rounded-xl p-5 ${fw.bg}`}>
-                        {/* Framework header */}
-                        <div className="flex items-start justify-between mb-4">
-                          <div>
-                            <h3 className={`font-bold text-base ${fw.color}`}>{fw.name}</h3>
-                            <p className="text-slate-400 text-xs mt-0.5">
-                              {s?.total_controls ?? 3} controls evaluated
-                            </p>
-                          </div>
-                          {!s?.error && <ScoreBadge pct={pct} />}
-                        </div>
-
-                        {s?.error ? (
-                          <div className="flex items-center gap-2 text-red-600 text-xs bg-red-900/20 rounded-lg px-3 py-2 mb-3">
-                            <FiAlertTriangle className="w-3.5 h-3.5" /> {s.error}
-                          </div>
-                        ) : s ? (
-                          <div className="mb-4">
-                            {/* Progress bar */}
-                            <div className="w-full bg-slate-100 rounded-full h-2 mb-2">
-                              <div
-                                className={`h-2 rounded-full transition-all ${pct >= 80 ? "bg-green-500" : pct >= 60 ? "bg-yellow-500" : "bg-red-500"}`}
-                                style={{ width: `${pct}%` }}
-                              />
+                      <div key={fw.id} className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                        <div className="p-5">
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <h3 className="font-bold text-slate-900">{fw.name}</h3>
+                              <p className="text-slate-400 text-xs mt-0.5">{fw.controls} controls evaluated</p>
                             </div>
-                            <p className="text-xs text-slate-400">
-                              {s.passed ?? 0} of {s.total_controls ?? 3} controls passing
-                            </p>
+                            {s && !s.error && (
+                              <div className="text-right">
+                                <p className={`text-2xl font-bold ${
+                                  s.score_pct >= 80 ? "text-green-600" :
+                                  s.score_pct >= 60 ? "text-amber-600" : "text-red-600"
+                                }`}>{s.score_pct}%</p>
+                                <p className="text-xs text-slate-400">{s.passed}/{s.total_controls} pass</p>
+                              </div>
+                            )}
                           </div>
-                        ) : (
-                          <div className="mb-4 text-slate-500 text-xs">No data yet — run a compliance check</div>
-                        )}
 
-                        {/* Status icons */}
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className={`flex items-center gap-1.5 text-xs ${pct >= 70 ? "text-green-600" : "text-red-600"}`}>
-                            {pct >= 70 ? <FiCheckCircle className="w-3.5 h-3.5" /> : <FiAlertTriangle className="w-3.5 h-3.5" />}
-                            {pct >= 70 ? "Compliant" : "Needs attention"}
-                          </div>
-                          <div className="text-slate-500 text-xs">•</div>
-                          <div className="flex items-center gap-1.5 text-slate-500 text-xs">
-                            <FiShield className="w-3.5 h-3.5" />
-                            {fw.id}
+                          {s?.error ? (
+                            <p className="text-xs text-red-600">{s.error}</p>
+                          ) : s ? (
+                            <div className="mb-3">
+                              <div className="w-full bg-slate-100 rounded-full h-1.5">
+                                <div className={`h-1.5 rounded-full transition-all ${s.score_pct >= 80 ? "bg-green-500" : s.score_pct >= 60 ? "bg-amber-500" : "bg-red-500"}`}
+                                  style={{ width: `${s.score_pct}%` }}/>
+                              </div>
+                              <span className={`inline-block mt-2 text-xs font-semibold px-2 py-0.5 rounded-full border ${
+                                s.score_pct >= 80 ? "bg-green-50 text-green-700 border-green-200" :
+                                s.score_pct >= 60 ? "bg-amber-50 text-amber-700 border-amber-200" :
+                                                     "bg-red-50 text-red-700 border-red-200"
+                              }`}>
+                                {s.score_pct >= 80 ? "Compliant" : s.score_pct >= 60 ? "Needs attention" : "At risk"}
+                                {" • "}{fw.id}
+                              </span>
+                            </div>
+                          ) : null}
+
+                          <div className="flex gap-2 mt-3">
+                            <button onClick={() => downloadCsv(fw.id)} disabled={downloading === fw.id}
+                              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-slate-300 text-slate-600 hover:text-slate-900 hover:border-slate-400 disabled:opacity-50 rounded-lg text-xs font-medium transition-colors">
+                              {downloading === fw.id
+                                ? <div className="w-3.5 h-3.5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"/>
+                                : <FiDownload className="w-3.5 h-3.5"/>}
+                              Download CSV
+                            </button>
+                            <button onClick={() => toggleExpand(fw.id)}
+                              className="flex items-center gap-1 px-3 py-2 bg-white border border-slate-300 text-slate-600 hover:text-slate-900 rounded-lg text-xs font-medium transition-colors">
+                              {isExpanded ? <FiChevronUp className="w-3.5 h-3.5"/> : <FiChevronDown className="w-3.5 h-3.5"/>}
+                              Details
+                            </button>
+                            <button onClick={loadSummary}
+                              className="p-2 bg-white border border-slate-300 text-slate-400 hover:text-slate-700 rounded-lg transition-colors">
+                              <FiRefreshCw className="w-3.5 h-3.5"/>
+                            </button>
                           </div>
                         </div>
 
-                        {/* Download button */}
-                        <button
-                          onClick={() => handleDownload(fw.id)}
-                          disabled={isDownloading}
-                          className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-slate-100 hover:bg-slate-200/60 border border-slate-200/60 text-slate-600 hover:text-slate-900 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-                        >
-                          {isDownloading
-                            ? <><div className="w-3.5 h-3.5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" /> Downloading…</>
-                            : <><FiDownload className="w-3.5 h-3.5" /> Download CSV Report</>}
-                        </button>
+                        {/* Expandable: per-control evidence + rationale */}
+                        {isExpanded && (
+                          <div className="border-t border-slate-100 bg-slate-50 p-4 space-y-3">
+                            {detailLoading === fw.id ? (
+                              <div className="flex justify-center py-6">
+                                <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"/>
+                              </div>
+                            ) : d?.error ? (
+                              <p className="text-xs text-red-600">{d.error}</p>
+                            ) : d?.controls ? (
+                              <>
+                                {d.controls.map((c: any) => (
+                                  <div key={c.control_id} className="bg-white border border-slate-200 rounded-lg p-3">
+                                    <div className="flex items-center justify-between mb-1.5">
+                                      <span className="text-xs font-semibold text-slate-700">{c.control_id} — {c.control_name}</span>
+                                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${STATUS_STYLE[c.status] || STATUS_STYLE.NEEDS_REVIEW}`}>
+                                        {c.status}
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-slate-500 leading-relaxed">{c.rationale}</p>
+                                    <details className="mt-1.5">
+                                      <summary className="text-[10px] text-slate-400 cursor-pointer hover:text-slate-600">Raw evidence</summary>
+                                      <pre className="text-[10px] text-slate-500 mt-1 bg-slate-50 rounded p-2 overflow-x-auto">
+                                        {JSON.stringify(c.evidence, null, 2)}
+                                      </pre>
+                                    </details>
+                                  </div>
+                                ))}
+
+                                {/* Methodology toggle */}
+                                <button onClick={() => toggleMethodology(fw.id)}
+                                  className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 font-medium pt-1">
+                                  <FiInfo className="w-3.5 h-3.5" />
+                                  {isMethodOpen ? "Hide" : "How is this calculated?"}
+                                </button>
+
+                                {isMethodOpen && (
+                                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-900 space-y-2">
+                                    {!m ? (
+                                      <div className="flex justify-center py-3">
+                                        <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"/>
+                                      </div>
+                                    ) : m.error ? (
+                                      <p className="text-red-600">{m.error}</p>
+                                    ) : (
+                                      <>
+                                        <p className="leading-relaxed">{m.scoring_explanation}</p>
+                                        <p className="font-semibold pt-1">Per-control weights:</p>
+                                        <ul className="space-y-0.5">
+                                          {m.controls?.map((mc: any) => (
+                                            <li key={mc.id}>
+                                              <span className="font-mono">{mc.control_id}</span> — weight {mc.weight}, evidence: {mc.evidence_queries?.join(", ")}
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </>
+                                    )}
+                                  </div>
+                                )}
+                              </>
+                            ) : null}
+                          </div>
+                        )}
                       </div>
                     );
                   })}

@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from typing import List
 from uuid import UUID
 from datetime import datetime, timedelta          # ← was missing
+from sqlalchemy import text                       # for grouped risk-history query
+from collections import defaultdict                # for risk-history day bucketing
 
 from app.database import get_db
 from app.models import Asset, RiskScore, RuntimeEvent, AuditLog  # ← RuntimeEvent was missing
@@ -192,33 +194,40 @@ async def get_asset_risk_history(
         RiskScore.organization_id == current_user.organization_id,
     ).first()
 
-    today   = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    start = today - timedelta(days=days - 1)
+
+    # Single grouped query instead of up to 60 round-trips (2 per day).
+    rows = db.execute(
+        text("""
+            SELECT DATE(created_at) AS day, status, COUNT(*) AS cnt
+            FROM runtime_events
+            WHERE organization_id = :org
+              AND asset_id = :asset
+              AND created_at >= :start
+            GROUP BY DATE(created_at), status
+            ORDER BY day
+        """),
+        {"org": str(current_user.organization_id), "asset": str(asset_id), "start": start},
+    ).fetchall()
+
+    counts = defaultdict(lambda: {"deny_count": 0, "allow_count": 0})
+    for row in rows:
+        day_str = row.day.strftime("%Y-%m-%d") if hasattr(row.day, "strftime") else str(row.day)
+        if row.status == "deny":
+            counts[day_str]["deny_count"] = row.cnt
+        elif row.status == "allow":
+            counts[day_str]["allow_count"] = row.cnt
+
     history = []
-
     for i in range(days - 1, -1, -1):
-        day_start = today - timedelta(days=i)
-        day_end   = day_start + timedelta(days=1)
-
-        deny_count = db.query(RuntimeEvent).filter(
-            RuntimeEvent.organization_id == current_user.organization_id,
-            RuntimeEvent.asset_id        == asset_id,
-            RuntimeEvent.status          == "deny",
-            RuntimeEvent.created_at      >= day_start,
-            RuntimeEvent.created_at      <  day_end,
-        ).count()
-
-        allow_count = db.query(RuntimeEvent).filter(
-            RuntimeEvent.organization_id == current_user.organization_id,
-            RuntimeEvent.asset_id        == asset_id,
-            RuntimeEvent.status          == "allow",
-            RuntimeEvent.created_at      >= day_start,
-            RuntimeEvent.created_at      <  day_end,
-        ).count()
-
+        day = today - timedelta(days=i)
+        day_str = day.strftime("%Y-%m-%d")
+        c = counts.get(day_str, {"deny_count": 0, "allow_count": 0})
         history.append({
-            "date":        day_start.strftime("%Y-%m-%d"),
-            "deny_count":  deny_count,
-            "allow_count": allow_count,
+            "date":        day_str,
+            "deny_count":  c["deny_count"],
+            "allow_count": c["allow_count"],
         })
 
     return {

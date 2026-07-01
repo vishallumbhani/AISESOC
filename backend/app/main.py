@@ -219,6 +219,13 @@ app.include_router(risk_scores_router,  prefix=p)
 app.include_router(runtime_router,      prefix=p)
 app.include_router(audit_logs_router,   prefix=p)
 app.include_router(graph_router,        prefix=p)
+
+try:
+    from app.routes.graph_v2 import router as graph_v2_router
+    app.include_router(graph_v2_router, prefix=p)
+    logger.info('Graph Explorer v2 router registered')
+except Exception as e:
+    logger.warning(f'Graph v2 router skipped: {e}')
 app.include_router(incidents_router,    prefix=p)
 
 # ── Enterprise & Platform routers ──────────────────────────────

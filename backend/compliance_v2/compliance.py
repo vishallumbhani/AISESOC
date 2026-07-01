@@ -266,7 +266,6 @@ def collect_evidence(db: Session, org_id: UUID, control_id: str, days: int = 30)
     """Pull evidence for a single compliance control by running its SQL queries."""
     from app.enterprise_models import ComplianceMapping
     from sqlalchemy import text
-    from decimal import Decimal
 
     mapping = db.query(ComplianceMapping).filter(ComplianceMapping.id == control_id).first()
     if not mapping:
@@ -278,8 +277,6 @@ def collect_evidence(db: Session, org_id: UUID, control_id: str, days: int = 30)
         try:
             resolved_sql = sql.replace(":org", f"'{org_id}'").replace(":start", f"'{start.isoformat()}'")
             result = db.execute(text(resolved_sql)).scalar()
-            if isinstance(result, Decimal):
-                result = float(result)
             evidence[key] = result if result is not None else 0
         except Exception as e:
             evidence[key] = f"error: {e}"
@@ -574,16 +571,6 @@ def get_control_methodology(framework: Optional[str] = None) -> List[Dict]:
 
 # ── Report export ──────────────────────────────────────────────
 
-def _json_safe(v):
-    """Coerce DB scalar types (Decimal, datetime, etc.) into JSON-serializable values."""
-    from decimal import Decimal
-    if isinstance(v, Decimal):
-        return float(v)
-    if isinstance(v, datetime):
-        return v.isoformat()
-    return v
-
-
 def report_to_csv(report: Dict) -> str:
     """Export a compliance report to CSV, including score, status, and rationale."""
     buf = io.StringIO()
@@ -597,7 +584,6 @@ def report_to_csv(report: Dict) -> str:
     w.writerow([])
     w.writerow(["Control ID", "Control Name", "Status", "Score", "Weight", "Rationale", "Evidence"])
     for c in report.get("controls", []):
-        safe_evidence = {k: _json_safe(v) for k, v in c.get("evidence", {}).items()}
         w.writerow([
             c.get("control_id", ""),
             c.get("control_name", ""),
@@ -605,7 +591,7 @@ def report_to_csv(report: Dict) -> str:
             c.get("score", ""),
             c.get("weight", ""),
             c.get("rationale", ""),
-            json.dumps(safe_evidence),
+            json.dumps(c.get("evidence", {})),
         ])
     return buf.getvalue()
 

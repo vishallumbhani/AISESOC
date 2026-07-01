@@ -22,10 +22,30 @@ from app.services.compliance import (
     generate_compliance_report,
     report_to_csv,
     seed_compliance_mappings,
+    get_control_methodology,
+    THRESHOLDS,
     COMPLIANCE_MAPPINGS,
 )
 
 router = APIRouter(prefix="/reports", tags=["reports"])
+
+# ---- Compliance summary cache (10 min TTL) ----
+import time as _time
+_SUMMARY_CACHE = {}
+_SUMMARY_CACHE_TTL = 600  # seconds
+
+
+def _get_cached_summary(key):
+    entry = _SUMMARY_CACHE.get(key)
+    if entry and (_time.time() - entry["ts"]) < _SUMMARY_CACHE_TTL:
+        return entry["value"]
+    return None
+
+
+def _set_cached_summary(key, value):
+    _SUMMARY_CACHE[key] = {"value": value, "ts": _time.time()}
+
+
 
 FRAMEWORKS = ["SOC2", "ISO27001", "NIST_AI_RMF", "OWASP_LLM"]
 
@@ -58,15 +78,25 @@ async def executive_report(
     if format == "csv":
         buf = io.StringIO()
         w = csv.writer(buf)
-        s = report["summary"]
+        w.writerow(["Executive Security Report"])
+        w.writerow(["Generated", report.get("generated_at", "")])
+        w.writerow(["Period (days)", report.get("period_days", days)])
+        w.writerow([])
         w.writerow(["Metric", "Value"])
-        for k, v in s.items():
-            w.writerow([k.replace("_"," ").title(), v])
+        # Flat report structure — iterate scalar top-level fields only,
+        # skip nested structures (top_violating_agents) which get their
+        # own section below.
+        for k, v in report.items():
+            if k in ("top_violating_agents", "generated_at", "period_days"):
+                continue
+            if isinstance(v, (list, dict)):
+                continue
+            w.writerow([k.replace("_", " ").title(), v])
         w.writerow([])
         w.writerow(["Top Violating Agents"])
         w.writerow(["Agent", "Deny Count"])
         for ag in report.get("top_violating_agents", []):
-            w.writerow([ag["agent"], ag["deny_count"]])
+            w.writerow([ag.get("agent", ""), ag.get("deny_count", 0)])
         return StreamingResponse(
             io.BytesIO(buf.getvalue().encode()),
             media_type="text/csv",
@@ -108,6 +138,40 @@ async def compliance_report(
     return report
 
 
+
+@router.get("/compliance/{framework}/methodology")
+async def compliance_methodology(
+    framework: str,
+    current_user: TokenData = Depends(get_current_user),
+):
+    """
+    Full transparency endpoint: returns the exact evidence queries,
+    weights, and scoring rules used to calculate compliance scores
+    for this framework. No black box — every number is explainable.
+    """
+    framework = framework.upper()
+    controls = get_control_methodology(framework)
+    if not controls:
+        raise HTTPException(status_code=404, detail=f"No methodology found for framework '{framework}'")
+    return {
+        "framework": framework,
+        "scoring_method": "weighted_partial_credit",
+        "scoring_explanation": (
+            "Each control is assessed against live evidence from your organization's "
+            "runtime events, policies, incidents, and audit logs. A control can score "
+            "PASS (1.0), PARTIAL (0.5), or NEEDS_REVIEW (0.0) based on documented "
+            "thresholds. The framework score is a weighted average across all controls, "
+            "where higher-impact controls (e.g. access control) carry more weight than "
+            "single-metric controls."
+        ),
+        "global_thresholds": THRESHOLDS,
+        "controls": controls,
+    }
+
+
+
+
+
 @router.get("/compliance/{framework}/controls")
 async def list_controls(
     framework: str,
@@ -139,6 +203,12 @@ async def report_summary(
 ):
     """Quick cross-framework compliance summary for dashboard."""
     seed_compliance_mappings(db)
+
+    cache_key = f"compliance_summary:{current_user.organization_id}"
+    cached = _get_cached_summary(cache_key)
+    if cached is not None:
+        return cached
+
     summaries = []
     for fw in FRAMEWORKS:
         try:
@@ -151,4 +221,6 @@ async def report_summary(
             })
         except Exception as e:
             summaries.append({"framework": fw, "error": str(e)})
-    return {"frameworks": summaries, "generated_at": datetime.utcnow().isoformat()}
+    result = {"frameworks": summaries, "generated_at": datetime.utcnow().isoformat()}
+    _set_cached_summary(cache_key, result)
+    return result
