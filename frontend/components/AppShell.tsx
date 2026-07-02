@@ -1,312 +1,247 @@
 /**
  * components/AppShell.tsx
- * AI-SecOS Enterprise Sidebar — Production Quality
+ * AI-SecOS Enterprise Layout — RC2 Fixed
  *
- * Design targets: Microsoft Defender, Datadog, Palo Alto Cortex
- * - Clean white sidebar, no thick outlines
- * - Soft blue active state (no box borders)
- * - Properly spaced group labels
- * - Collapse + Sign Out separated from nav
- * - Lucide icons, consistent 16px size
+ * Layout: CSS Grid with fixed sidebar column.
+ * The sidebar NEVER overlaps content — grid handles separation.
+ *
+ * Grid:
+ *   [sidebar 220px] [main 1fr]
+ *
+ * Sidebar: position sticky, full viewport height.
+ * Main: scrolls independently.
  */
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { clearOrgSession } from "../lib/tokens";
 import {
-  LayoutDashboard, Bot, Database, Link2, ShieldCheck,
-  PlayCircle, Zap, TriangleAlert, GitMerge, TrendingUp,
-  BarChart3, ClipboardList, Users, Settings, Key,
-  LogOut, Menu, X, ChevronLeft, ChevronRight,
-  Activity, FileCheck2,
-} from "lucide-react";
+  FiGrid, FiCpu, FiDatabase, FiShield, FiPlay,
+  FiZap, FiAlertTriangle, FiGitMerge, FiBarChart2,
+  FiList, FiUsers, FiSettings, FiLogOut, FiChevronRight,
+  FiActivity, FiCheckSquare, FiKey, FiLink,
+} from "react-icons/fi";
 
-// ── Types ──────────────────────────────────────────────────────
-interface NavItem {
-  label: string;
-  href:  string;
-  icon:  React.ElementType;
-}
-interface NavGroup {
-  label:   string;
-  emoji:   string;
-  items:   NavItem[];
-}
+const SIDEBAR_W = 220;
 
-// ── Navigation structure ───────────────────────────────────────
-const NAV_GROUPS: NavGroup[] = [
+const NAV = [
   {
-    label: "AI Governance",
-    emoji: "🛡",
+    section: null,
     items: [
-      { label: "Agents",           href: "/agents",          icon: Bot },
-      { label: "Assets",           href: "/assets",          icon: Database },
-      { label: "Policies",         href: "/policies",        icon: ShieldCheck },
-      { label: "Policy Simulator", href: "/policy-simulator",icon: PlayCircle },
+      { label: "Dashboard",   href: "/dashboard",         icon: FiGrid },
     ],
   },
   {
-    label: "Security Operations",
-    emoji: "🚨",
+    section: "Inventory",
     items: [
-      { label: "Runtime",    href: "/runtime",    icon: Zap },
-      { label: "Incidents",  href: "/incidents",  icon: TriangleAlert },
-      { label: "Audit Logs", href: "/audit-logs", icon: ClipboardList },
-      { label: "Graph",      href: "/graph",      icon: GitMerge },
+      { label: "Agents",      href: "/agents",            icon: FiCpu },
+      { label: "Assets",      href: "/assets",            icon: FiDatabase },
+      { label: "Connectors",  href: "/enterprise",        icon: FiLink },
     ],
   },
   {
-    label: "Risk & Compliance",
-    emoji: "📈",
+    section: "Security",
     items: [
-      { label: "Risk",     href: "/risk-timeline", icon: TrendingUp },
-      { label: "Reports",  href: "/reports",       icon: BarChart3 },
-      { label: "Audit",    href: "/audit-logs",    icon: FileCheck2 },
+      { label: "Policies",    href: "/policies",          icon: FiShield },
+      { label: "Runtime",     href: "/runtime",           icon: FiZap },
+      { label: "Incidents",   href: "/incidents",         icon: FiAlertTriangle },
+      { label: "Simulator",   href: "/policy-simulator",  icon: FiPlay },
     ],
   },
   {
-    label: "Integrations",
-    emoji: "🔌",
+    section: "Governance",
     items: [
-      { label: "Connectors & Keys", href: "/enterprise", icon: Link2 },
+      { label: "Compliance",  href: "/reports",           icon: FiCheckSquare },
+      { label: "Reports",     href: "/reports",           icon: FiBarChart2 },
+      { label: "Audit Logs",  href: "/audit-logs",        icon: FiList },
     ],
   },
   {
-    label: "Administration",
-    emoji: "⚙",
+    section: "Investigation",
     items: [
-      { label: "Users",    href: "/users",    icon: Users },
-      { label: "Settings", href: "/settings", icon: Settings },
+      { label: "Graph",       href: "/graph",             icon: FiGitMerge },
+      { label: "Risk",        href: "/risk-timeline",     icon: FiActivity },
+    ],
+  },
+  {
+    section: "Administration",
+    items: [
+      { label: "Users",       href: "/users",             icon: FiUsers },
+      { label: "Settings",    href: "/settings",          icon: FiSettings },
     ],
   },
 ];
 
-// ── AppShell ───────────────────────────────────────────────────
-const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+interface Props {
+  children: React.ReactNode;
+}
+
+export default function AppShell({ children }: Props) {
   const router = useRouter();
-  const [collapsed, setCollapsed]   = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Close mobile on route change
-  useEffect(() => { setMobileOpen(false); }, [router.pathname]);
-
-  const logout = useCallback(() => { clearOrgSession(); router.push("/login"); }, []);
-
-  const isActive = (href: string): boolean => {
-    if (href === "/dashboard")  return router.pathname === "/dashboard";
-    if (href === "/enterprise") return router.pathname === "/enterprise";
-    return router.pathname === href || router.pathname.startsWith(href + "/");
+  const logout = () => {
+    clearOrgSession();
+    router.push("/login");
   };
 
-  // ── Single nav item ──────────────────────────────────────────
-  const NavItem: React.FC<{ item: NavItem }> = ({ item }) => {
-    const Icon   = item.icon;
-    const active = isActive(item.href);
-    return (
-      <Link
-        href={item.href}
-        title={collapsed ? item.label : undefined}
-        className={[
-          "flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-100 no-underline group",
-          collapsed ? "justify-center" : "",
-          active
-            ? "bg-blue-50 text-blue-700 font-semibold"
-            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium",
-        ].join(" ")}
-        style={{ fontSize: "0.8125rem" }}
-      >
-        <Icon
-          size={15}
-          strokeWidth={active ? 2.5 : 2}
-          className={[
-            "flex-shrink-0 transition-colors",
-            active ? "text-blue-600" : "text-slate-400 group-hover:text-slate-600",
-          ].join(" ")}
-        />
-        {!collapsed && <span className="truncate leading-none">{item.label}</span>}
-        {!collapsed && active && (
-          <span className="ml-auto w-1 h-1 rounded-full bg-blue-500 flex-shrink-0" />
-        )}
-      </Link>
-    );
-  };
-
-  // ── Sidebar inner content ────────────────────────────────────
-  const SidebarInner: React.FC = () => (
-    <div className="flex flex-col h-full">
-
-      {/* Logo */}
-      <div
-        className={[
-          "flex items-center h-[60px] border-b border-slate-100 flex-shrink-0",
-          collapsed ? "justify-center px-3" : "px-4 gap-3",
-        ].join(" ")}
-      >
-        <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-          <ShieldCheck size={16} className="text-white" strokeWidth={2.5} />
-        </div>
-        {!collapsed && (
-          <div className="min-w-0">
-            <p className="font-bold text-slate-900 leading-none" style={{ fontSize: "0.9rem" }}>
-              AI-SecOS
-            </p>
-            <p className="text-slate-400 mt-0.5 truncate" style={{ fontSize: "0.7rem" }}>
-              Enterprise Security
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Dashboard link — pinned above groups */}
-      <div className="px-3 pt-4 pb-2">
-        <Link
-          href="/dashboard"
-          title={collapsed ? "Dashboard" : undefined}
-          className={[
-            "flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-100 no-underline",
-            collapsed ? "justify-center" : "",
-            isActive("/dashboard")
-              ? "bg-blue-50 text-blue-700 font-semibold"
-              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium",
-          ].join(" ")}
-          style={{ fontSize: "0.8125rem" }}
-        >
-          <LayoutDashboard
-            size={15}
-            strokeWidth={isActive("/dashboard") ? 2.5 : 2}
-            className={isActive("/dashboard") ? "text-blue-600" : "text-slate-400"}
-          />
-          {!collapsed && <span className="leading-none">Dashboard</span>}
-          {!collapsed && isActive("/dashboard") && (
-            <span className="ml-auto w-1 h-1 rounded-full bg-blue-500" />
-          )}
-        </Link>
-      </div>
-
-      {/* Nav groups */}
-      <nav className="flex-1 overflow-y-auto px-3 pb-2 space-y-5">
-        {NAV_GROUPS.map((group) => (
-          <div key={group.label}>
-            {!collapsed ? (
-              <p
-                className="text-slate-400 font-semibold uppercase tracking-widest mb-2 px-3 select-none"
-                style={{ fontSize: "0.625rem", letterSpacing: "0.1em" }}
-              >
-                {group.label}
-              </p>
-            ) : (
-              <div className="border-t border-slate-100 my-2" />
-            )}
-            <div className="space-y-0.5">
-              {group.items.map((item) => (
-                <NavItem key={item.label + item.href} item={item} />
-              ))}
-            </div>
-          </div>
-        ))}
-      </nav>
-
-      {/* Footer — separated from nav */}
-      <div className="flex-shrink-0 border-t border-slate-100 px-3 py-3 space-y-0.5">
-        {/* Collapse (desktop only) */}
-        <button
-          onClick={() => setCollapsed((c) => !c)}
-          className={[
-            "hidden lg:flex items-center gap-2.5 w-full px-3 py-2 rounded-lg",
-            "text-slate-400 hover:bg-slate-50 hover:text-slate-600",
-            "transition-all duration-100",
-            collapsed ? "justify-center" : "",
-          ].join(" ")}
-          style={{ fontSize: "0.8125rem" }}
-          title={collapsed ? "Expand" : "Collapse sidebar"}
-        >
-          {collapsed
-            ? <ChevronRight size={15} />
-            : <><ChevronLeft size={15} /><span className="font-medium">Collapse</span></>
-          }
-        </button>
-
-        {/* Sign out */}
-        <button
-          onClick={logout}
-          className={[
-            "flex items-center gap-2.5 w-full px-3 py-2 rounded-lg",
-            "text-slate-400 hover:bg-red-50 hover:text-red-600",
-            "transition-all duration-100",
-            collapsed ? "justify-center" : "",
-          ].join(" ")}
-          style={{ fontSize: "0.8125rem" }}
-          title={collapsed ? "Sign Out" : undefined}
-        >
-          <LogOut size={15} className="flex-shrink-0" />
-          {!collapsed && <span className="font-medium">Sign Out</span>}
-        </button>
-      </div>
-    </div>
-  );
+  const active = (href: string) =>
+    router.pathname === href ||
+    (href !== "/dashboard" && router.pathname.startsWith(href));
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: "#F8FAFC" }}>
+    /**
+     * ROOT: CSS Grid — sidebar fixed width, main fills rest.
+     * This is the ONLY place sidebar width is set.
+     * No page-level margins needed.
+     */
+    <div style={{
+      display: "grid",
+      gridTemplateColumns: `${SIDEBAR_W}px 1fr`,
+      minHeight: "100vh",
+    }}>
 
-      {/* ── Desktop sidebar ──────────────────────────────────── */}
-      <aside
-        className="hidden lg:flex flex-col flex-shrink-0 border-r border-slate-200 transition-all duration-200"
-        style={{
-          width:      collapsed ? "3.5rem" : "13.5rem",
-          background: "#ffffff",
-          boxShadow:  "1px 0 0 0 #e2e8f0",
-        }}
-      >
-        <SidebarInner />
+      {/* ── SIDEBAR ─────────────────────────────────────────
+          position: sticky + top:0 + height:100vh means it
+          sticks to viewport while main scrolls.
+          It NEVER overlaps main — the grid column handles separation.
+      ────────────────────────────────────────────────────── */}
+      <aside style={{
+        position: "sticky",
+        top: 0,
+        height: "100vh",
+        background: "#0F172A",
+        borderRight: "1px solid #1E293B",
+        display: "flex",
+        flexDirection: "column",
+        overflowY: "auto",
+        zIndex: 40,
+        flexShrink: 0,
+      }}>
+
+        {/* Logo */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 10,
+          padding: "18px 16px 16px",
+          borderBottom: "1px solid #1E293B",
+          flexShrink: 0,
+        }}>
+          <div style={{
+            width: 32, height: 32,
+            background: "#2563EB",
+            borderRadius: 8,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <FiShield size={16} color="#fff" />
+          </div>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#F1F5F9", letterSpacing: "-0.3px" }}>
+              AI-SecOS
+            </div>
+            <div style={{ fontSize: 10, color: "#3B82F6", fontWeight: 500, letterSpacing: "0.2px" }}>
+              Enterprise Security
+            </div>
+          </div>
+        </div>
+
+        {/* Nav */}
+        <nav style={{ flex: 1, padding: "8px 0" }}>
+          {NAV.map((group, gi) => (
+            <div key={gi} style={{ marginBottom: 4 }}>
+              {group.section && (
+                <div style={{
+                  fontSize: 10, fontWeight: 700, color: "#334155",
+                  textTransform: "uppercase", letterSpacing: "0.8px",
+                  padding: "10px 16px 4px",
+                }}>
+                  {group.section}
+                </div>
+              )}
+              {group.items.map((item) => {
+                const Icon = item.icon;
+                const isActive = active(item.href);
+                return (
+                  <Link
+                    key={item.href + item.label}
+                    href={item.href}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 9,
+                      padding: "7px 12px 7px 14px",
+                      margin: "1px 8px",
+                      borderRadius: 7,
+                      fontSize: 13,
+                      fontWeight: isActive ? 600 : 400,
+                      color: isActive ? "#F1F5F9" : "#64748B",
+                      background: isActive ? "#1E3A5F" : "transparent",
+                      textDecoration: "none",
+                      transition: "all 0.1s",
+                      borderLeft: isActive ? "2px solid #3B82F6" : "2px solid transparent",
+                    }}
+                    onMouseEnter={e => {
+                      if (!isActive) {
+                        (e.currentTarget as HTMLElement).style.background = "#1E293B";
+                        (e.currentTarget as HTMLElement).style.color = "#CBD5E1";
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      if (!isActive) {
+                        (e.currentTarget as HTMLElement).style.background = "transparent";
+                        (e.currentTarget as HTMLElement).style.color = "#64748B";
+                      }
+                    }}
+                  >
+                    <Icon size={14} style={{ flexShrink: 0, color: isActive ? "#3B82F6" : "currentColor" }} />
+                    <span style={{ flex: 1 }}>{item.label}</span>
+                    {isActive && <FiChevronRight size={11} style={{ color: "#3B82F6", opacity: 0.6 }} />}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
+        </nav>
+
+        {/* Footer */}
+        <div style={{ borderTop: "1px solid #1E293B", padding: "8px", flexShrink: 0 }}>
+          <button
+            onClick={logout}
+            style={{
+              display: "flex", alignItems: "center", gap: 9,
+              padding: "7px 14px", margin: "1px 0",
+              borderRadius: 7, width: "100%",
+              fontSize: 13, fontWeight: 400, color: "#64748B",
+              background: "none", border: "none",
+              cursor: "pointer", transition: "all 0.1s",
+              textAlign: "left",
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.background = "#1E293B";
+              (e.currentTarget as HTMLElement).style.color = "#CBD5E1";
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.background = "transparent";
+              (e.currentTarget as HTMLElement).style.color = "#64748B";
+            }}
+          >
+            <FiLogOut size={14} />
+            Sign Out
+          </button>
+        </div>
       </aside>
 
-      {/* ── Mobile drawer ────────────────────────────────────── */}
-      {mobileOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-40 lg:hidden"
-            style={{ background: "rgba(15,23,42,0.4)" }}
-            onClick={() => setMobileOpen(false)}
-          />
-          <aside
-            className="fixed left-0 top-0 bottom-0 z-50 flex flex-col border-r border-slate-200 lg:hidden"
-            style={{ width: "13.5rem", background: "#ffffff" }}
-          >
-            <SidebarInner />
-          </aside>
-        </>
-      )}
+      {/* ── MAIN ────────────────────────────────────────────
+          Occupies the second grid column (1fr = all remaining width).
+          Content scrolls here. Sidebar never touches this.
+      ────────────────────────────────────────────────────── */}
+      <main style={{
+        minHeight: "100vh",
+        background: "#F8FAFC",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+        minWidth: 0,  /* prevents grid blowout */
+      }}>
+        {children}
+      </main>
 
-      {/* ── Page area ────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-
-        {/* Mobile topbar */}
-        <header
-          className="lg:hidden flex items-center h-[60px] border-b border-slate-200 px-4 gap-3 flex-shrink-0"
-          style={{ background: "#ffffff" }}
-        >
-          <button
-            onClick={() => setMobileOpen((o) => !o)}
-            className="p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-600"
-          >
-            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-          <div className="w-6 h-6 bg-blue-600 rounded-md flex items-center justify-center">
-            <ShieldCheck size={13} className="text-white" strokeWidth={2.5} />
-          </div>
-          <span className="font-bold text-slate-900 text-sm">AI-SecOS</span>
-        </header>
-
-        {/* Page content */}
-        <main
-          className="flex-1 overflow-y-auto"
-          style={{ background: "#F8FAFC" }}
-        >
-          {children}
-        </main>
-      </div>
     </div>
   );
-};
-
-export default AppShell;
+}

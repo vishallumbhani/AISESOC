@@ -11,7 +11,7 @@ import { Incident, IncidentStatus } from "../lib/types";
 import {
   FiAlertTriangle, FiRefreshCw, FiX, FiCheckCircle, FiXCircle,
   FiUser, FiClock, FiShield, FiDatabase, FiList, FiActivity,
-  FiSearch, FiChevronDown, FiChevronUp,
+  FiSearch, FiChevronDown, FiChevronUp, FiInfo,
 } from "react-icons/fi";
 
 // ── Constants ──────────────────────────────────────────────────
@@ -47,11 +47,11 @@ function TimelineEntry({ entry, isLast }: { entry: any; isLast: boolean }) {
       <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-10 ${
         isCreated ? "bg-red-900/60 border-2 border-red-500" :
         isSystem  ? "bg-white border border-slate-200" :
-                    "bg-indigo-900/60 border border-indigo-500"
+                    "bg-indigo-900/60 border border-blue-500"
       }`}>
         {isCreated ? <FiAlertTriangle className="w-3.5 h-3.5 text-red-600" /> :
          isSystem  ? <FiActivity className="w-3.5 h-3.5 text-slate-500" /> :
-                     <FiUser className="w-3.5 h-3.5 text-indigo-600" />}
+                     <FiUser className="w-3.5 h-3.5 text-blue-600" />}
       </div>
       <div className="flex-1 pb-4">
         <div className="flex items-center gap-2 mb-0.5">
@@ -186,7 +186,7 @@ function InvestigationDrawer({
             <button key={t.id} onClick={() => setTab(t.id as any)}
               className={`px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
                 tab === t.id
-                  ? "border-b-2 border-indigo-500 text-indigo-600"
+                  ? "border-b-2 border-blue-500 text-blue-600"
                   : "text-slate-500 hover:text-slate-900"
               }`}>
               {t.label}
@@ -196,7 +196,7 @@ function InvestigationDrawer({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
-          {error && <div className="mb-4 bg-red-900/30 border border-red-700 text-red-300 rounded-lg px-4 py-2 text-sm">{error}</div>}
+          {error && <div className="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-2 text-sm">{error}</div>}
 
           {/* ── Overview ── */}
           {tab === "overview" && (
@@ -330,7 +330,7 @@ function InvestigationDrawer({
                   <>
                     {/* WHO */}
                     <div className="bg-white border border-slate-200 rounded-xl p-4">
-                      <h3 className="text-sm font-bold text-indigo-600 uppercase tracking-wide mb-3">👤 WHO</h3>
+                      <h3 className="text-sm font-bold text-blue-600 uppercase tracking-wide mb-3">👤 WHO</h3>
                       <div className="grid grid-cols-2 gap-3 mb-3">
                         <div className="bg-slate-100 rounded-lg p-3">
                           <p className="text-xs text-slate-500 mb-1">Agent</p>
@@ -387,7 +387,7 @@ function InvestigationDrawer({
                       <h3 className="text-sm font-bold text-red-600 uppercase tracking-wide mb-3">🚨 WHY</h3>
                       {inv?.why?.reason && (
                         <div className="bg-red-900/20 border border-red-800 rounded-lg px-4 py-3 mb-3">
-                          <p className="text-red-300 font-semibold">{inv.why.reason}</p>
+                          <p className="text-red-700 font-semibold">{inv.why.reason}</p>
                         </div>
                       )}
                       {(inv?.why?.policies_applied || []).map((p: any, i: number) => (
@@ -511,7 +511,7 @@ const IncidentsPage: React.FC = () => {
           <div className="flex gap-2 mb-5 flex-wrap">
             <button onClick={() => setStatusFilter("")}
               className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
-                !statusFilter ? "bg-indigo-600 border-indigo-500 text-slate-900" : "bg-white border-slate-200 text-slate-500 hover:border-gray-500"
+                !statusFilter ? "bg-blue-600 border-blue-500 text-slate-900" : "bg-white border-slate-200 text-slate-500 hover:border-gray-500"
               }`}>All ({incidents.length})</button>
             {STATUSES.map(s => (
               <button key={s} onClick={() => setStatusFilter(statusFilter === s ? "" : s)}
@@ -545,12 +545,12 @@ const IncidentsPage: React.FC = () => {
               {filtered.length === 0
                 ? (
                   <div className="bg-white border border-slate-200 rounded-xl p-10 text-center">
-                    <FiAlertTriangle className="w-12 h-12 mx-auto mb-3 text-gray-700" />
-                    <p className="text-slate-400 font-medium">No incidents match the current filters.</p>
-                    <p className="text-slate-500 text-sm mt-1">
+                    <FiAlertTriangle className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                    <p className="text-slate-700 font-semibold mb-1">No incidents found</p>
+                    <p className="text-slate-400 text-sm mt-1 max-w-md mx-auto">
                       {statusFilter || sevFilter || search
-                        ? "Try clearing filters."
-                        : "Incidents are auto-created when agents are denied 3+ times in 10 minutes."}
+                        ? "No incidents match your current filters. Try clearing the status or severity filter, or search by a different keyword."
+                        : "Incidents are auto-created when an agent is denied 3+ times in 10 minutes, or when a critical anomaly is detected. A clean queue means your agents are operating within policy boundaries."}
                     </p>
                   </div>
                 )

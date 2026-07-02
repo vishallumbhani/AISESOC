@@ -111,7 +111,7 @@ const Assets: React.FC = () => {
               <button key={c}
                 onClick={() => setClassFilter(classFilter === c ? "" : c)}
                 className={`rounded-xl p-4 text-left transition-all border-2 shadow-sm ${
-                  classFilter === c ? "border-indigo-500 bg-indigo-50" : "border-transparent bg-white hover:border-gray-200"
+                  classFilter === c ? "border-blue-500 bg-indigo-50" : "border-transparent bg-white hover:border-gray-200"
                 }`}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-lg">{CLASS_ICON[c]}</span>

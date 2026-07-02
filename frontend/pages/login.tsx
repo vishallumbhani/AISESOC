@@ -69,7 +69,7 @@ const Login: React.FC = () => {
             <p className="text-white/50 text-xs mb-6">Sign in to your organization</p>
 
             {error && (
-              <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 text-red-300 rounded-lg px-3 py-2.5 mb-4 text-sm">
+              <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 text-red-700 rounded-lg px-3 py-2.5 mb-4 text-sm">
                 <FiAlertCircle className="w-4 h-4 flex-shrink-0" />
                 {error}
               </div>

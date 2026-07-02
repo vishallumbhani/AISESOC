@@ -232,7 +232,7 @@ const AssetDetail: React.FC = () => {
                   <div className="grid grid-cols-4 gap-2">
                     {CLASSIFICATIONS.map(c=>(
                       <button key={c} type="button" onClick={()=>setEditData({...editData,classification:c})}
-                        className={`rounded-lg border-2 p-2 text-center transition-all ${editData.classification===c ? "border-indigo-500 bg-indigo-50" : "border-gray-200 hover:border-gray-300"}`}>
+                        className={`rounded-lg border-2 p-2 text-center transition-all ${editData.classification===c ? "border-blue-500 bg-indigo-50" : "border-gray-200 hover:border-gray-300"}`}>
                         <div className="text-xl mb-0.5">{CLASS_ICON[c]}</div>
                         <p className="text-xs font-medium capitalize text-gray-700">{c}</p>
                       </button>
@@ -253,7 +253,7 @@ const AssetDetail: React.FC = () => {
             {TABS.map(t=>(
               <button key={t.id} onClick={()=>setActiveTab(t.id as any)}
                 className={`px-4 py-3 text-sm font-medium transition-colors ${
-                  activeTab===t.id ? "border-b-2 border-indigo-500 text-indigo-600" : "text-gray-500 hover:text-gray-700"
+                  activeTab===t.id ? "border-b-2 border-blue-500 text-blue-600" : "text-gray-500 hover:text-gray-700"
                 }`}>
                 {t.label}
               </button>
@@ -411,7 +411,7 @@ const AssetDetail: React.FC = () => {
                 {/* Protecting policies */}
                 <div>
                   <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                    <FiShield className="w-4 h-4 text-indigo-500"/>
+                    <FiShield className="w-4 h-4 text-blue-500"/>
                     Protected By ({protection?.protecting_policies?.length ?? 0} policies)
                   </h3>
                   {(protection?.protecting_policies || []).length === 0 ? (
@@ -446,7 +446,7 @@ const AssetDetail: React.FC = () => {
                 {/* Recent access */}
                 <div>
                   <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                    <FiActivity className="w-4 h-4 text-indigo-500"/>
+                    <FiActivity className="w-4 h-4 text-blue-500"/>
                     Recent Access (last 20)
                   </h3>
                   {(protection?.recent_access || []).length === 0 ? (

@@ -26,10 +26,10 @@ const RISK_COLOR = (score: number) =>
 const RISK_BG = (score: number) =>
   score >= 80 ? "bg-red-500" : score >= 60 ? "bg-orange-500" : score >= 40 ? "bg-yellow-500" : "bg-green-500";
 const SEV_CLS: Record<string, string> = {
-  critical: "bg-red-900/40 text-red-600 border-red-700",
-  high:     "bg-orange-900/40 text-orange-600 border-orange-700",
-  medium:   "bg-yellow-900/40 text-amber-600 border-yellow-700",
-  low:      "bg-green-900/40 text-green-600 border-green-700",
+  critical: "bg-red-50 text-red-700 border-red-200",
+  high:     "bg-orange-50 text-orange-700 border-orange-200",
+  medium:   "bg-amber-50 text-amber-700 border-amber-200",
+  low:      "bg-green-50 text-green-700 border-green-200",
 };
 const PRIO_DOT: Record<string, string> = {
   critical: "bg-red-400", high: "bg-orange-400", medium: "bg-yellow-400", low: "bg-green-400"
@@ -64,7 +64,7 @@ function TrendBars({ data }: { data: any[] }) {
               title={`Blocked: ${d.blocked}`}
             />
             <div
-              className="w-full bg-indigo-500/60 rounded-sm"
+              className="w-full bg-blue-500/60 rounded-sm"
               style={{ height: `${(d.allowed / maxTotal) * 80}px` }}
               title={`Allowed: ${d.allowed}`}
             />
@@ -81,11 +81,11 @@ function SectionHeader({ title, href, icon }: { title: string; href?: string; ic
   return (
     <div className="flex items-center justify-between mb-3">
       <h2 className="font-semibold text-slate-700 text-sm flex items-center gap-2">
-        {icon && <span className="text-indigo-600">{icon}</span>}
+        {icon && <span className="text-blue-600">{icon}</span>}
         {title}
       </h2>
       {href && (
-        <Link href={href} className="text-xs text-indigo-600 hover:text-indigo-300 flex items-center gap-0.5">
+        <Link href={href} className="text-xs text-blue-600 hover:text-blue-400 flex items-center gap-0.5">
           View all <FiArrowRight className="w-3 h-3" />
         </Link>
       )}
@@ -128,7 +128,7 @@ function GovernanceRing({ score, label }: { score: number; label: string }) {
   return (
     <div className="relative flex items-center justify-center w-32 h-32 mx-auto">
       <svg viewBox="0 0 36 36" className="w-32 h-32 -rotate-90">
-        <circle cx="18" cy="18" r="15" fill="none" stroke="#1f2937" strokeWidth="2.5" />
+        <circle cx="18" cy="18" r="15" fill="none" stroke="#E2E8F0" strokeWidth="2.5" />
         <circle cx="18" cy="18" r="15" fill="none" stroke={color} strokeWidth="2.5"
           strokeDasharray={`${score * 0.942} 94.2`} strokeLinecap="round" />
       </svg>
@@ -186,7 +186,7 @@ const Dashboard: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="w-10 h-10 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-slate-400 text-sm">Loading enterprise dashboard…</p>
         </div>
       </div>
@@ -199,7 +199,7 @@ const Dashboard: React.FC = () => {
         <div className="text-center">
           <FiAlertTriangle className="w-10 h-10 text-red-500 mx-auto mb-3" />
           <p className="text-slate-600 mb-4">{error || "No data"}</p>
-          <button onClick={load} className="px-4 py-2 bg-indigo-600 text-slate-900 rounded-lg text-sm">Retry</button>
+          <button onClick={load} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">Retry</button>
         </div>
       </div>
     );
@@ -212,10 +212,10 @@ const Dashboard: React.FC = () => {
   const trendColor = overview.risk_trend > 0 ? "text-red-600" : overview.risk_trend < 0 ? "text-green-600" : "text-slate-500";
   const TrendIcon  = overview.risk_trend > 0 ? FiTrendingUp : overview.risk_trend < 0 ? FiTrendingDown : FiMinus;
   const RISK_LEVEL_CLS: Record<string, string> = {
-    CRITICAL: "text-red-600 bg-red-900/30 border-red-700",
-    HIGH:     "text-orange-600 bg-orange-900/30 border-orange-700",
-    MEDIUM:   "text-amber-600 bg-yellow-900/30 border-yellow-700",
-    LOW:      "text-green-600 bg-green-900/30 border-green-700",
+    CRITICAL: "text-red-700 bg-red-50 border-red-200",
+    HIGH:     "text-orange-700 bg-orange-50 border-orange-200",
+    MEDIUM:   "text-amber-700 bg-amber-50 border-amber-200",
+    LOW:      "text-green-700 bg-green-50 border-green-200",
   };
 
   const sparkData = runtime_trend.map((d: any) => d.total);
@@ -245,12 +245,12 @@ const Dashboard: React.FC = () => {
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 pt-5 space-y-4">
 
           {/* ── Row 1: Enterprise Risk Score + KPI cards ──────── */}
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3">
             {/* Enterprise Risk Score — spans 2 on mobile, 1 on xl */}
-            <div className={`col-span-2 md:col-span-1 border rounded-xl p-4 ${RISK_LEVEL_CLS[overview.risk_level] || "border-slate-200 bg-white"}`}>
+            <div className={`col-span-2 md:col-span-2 xl:col-span-2 border-2 rounded-xl p-5 ${RISK_LEVEL_CLS[overview.risk_level] || "border-slate-200 bg-white"}`}>
               <p className="text-xs text-slate-500 uppercase tracking-wide mb-2">Enterprise Risk Score</p>
               <div className="flex items-end gap-3">
-                <p className={`text-5xl font-black ${RISK_COLOR(overview.enterprise_risk_score)}`}>
+                <p className={`text-6xl font-black ${RISK_COLOR(overview.enterprise_risk_score)}`}>
                   {overview.enterprise_risk_score}
                 </p>
                 <div className="mb-1">
@@ -273,7 +273,7 @@ const Dashboard: React.FC = () => {
             {[
               { label: "AI Assets Protected",         value: overview.total_assets,  icon: <FiDatabase />, href: "/assets",          accent: "text-blue-600" },
               { label: "AI Agents Protected",          value: overview.total_agents,  icon: <FiCpu />,     href: "/agents",          accent: "text-purple-600" },
-              { label: "Active Security Policies",     value: overview.total_policies, icon: <FiShield />, href: "/policies",        accent: "text-indigo-600" },
+              { label: "Active Security Policies",     value: overview.total_policies, icon: <FiShield />, href: "/policies",        accent: "text-blue-600" },
               { label: "High Risk AI Assets",          value: high_risk_assets.length, icon: <FiAlertTriangle />, href: "/assets?severity=high", accent: high_risk_assets.length > 0 ? "text-orange-600" : "text-slate-400" },
               { label: "Active AI Security Incidents", value: overview.open_incidents, icon: <FiTarget />, href: "/incidents?status=open", accent: overview.open_incidents > 0 ? "text-red-600" : "text-slate-400" },
             ].map(card => (
@@ -299,7 +299,7 @@ const Dashboard: React.FC = () => {
                 { label: "Critical Prompts",  value: today.critical_prompts,       color: "text-red-600" },
                 { label: "Policy Violations", value: today.policy_violations,      color: "text-amber-600" },
                 { label: "Unique Users",      value: today.unique_users,           color: "text-purple-600" },
-                { label: "Unique Agents",     value: today.unique_agents,          color: "text-indigo-600" },
+                { label: "Unique Agents",     value: today.unique_agents,          color: "text-blue-600" },
               ].map(m => (
                 <div key={m.label} className="text-center">
                   <p className={`text-2xl font-bold ${m.color}`}>{m.value}</p>
@@ -343,7 +343,7 @@ const Dashboard: React.FC = () => {
               <SectionHeader title="Runtime Activity — 7 Days" href="/runtime" icon={<FiBarChart2 className="w-4 h-4" />} />
               <TrendBars data={runtime_trend} />
               <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
-                <span className="flex items-center gap-1"><span className="w-3 h-2 bg-indigo-500/60 rounded-sm inline-block" /> Allowed</span>
+                <span className="flex items-center gap-1"><span className="w-3 h-2 bg-blue-500/60 rounded-sm inline-block" /> Allowed</span>
                 <span className="flex items-center gap-1"><span className="w-3 h-2 bg-red-500/60 rounded-sm inline-block" /> Blocked</span>
               </div>
             </Card>
@@ -416,7 +416,7 @@ const Dashboard: React.FC = () => {
                   </Link>
                 ))}
               </div>
-              <Link href="/incidents" className="block text-center text-xs text-indigo-600 hover:text-indigo-300 mt-1">
+              <Link href="/incidents" className="block text-center text-xs text-blue-600 hover:text-blue-400 mt-1">
                 Open Incident Queue →
               </Link>
             </Card>
@@ -434,9 +434,9 @@ const Dashboard: React.FC = () => {
                       <div key={i} className="flex items-center gap-3">
                         <span className="text-slate-700 text-sm flex-1 truncate">{p.policy}</span>
                         <div className="w-24 bg-slate-100 rounded-full h-1.5">
-                          <div className="h-1.5 rounded-full bg-indigo-500" style={{ width: `${(p.triggers / max) * 100}%` }} />
+                          <div className="h-1.5 rounded-full bg-blue-500" style={{ width: `${(p.triggers / max) * 100}%` }} />
                         </div>
-                        <span className="text-indigo-600 text-sm font-bold w-6 text-right">{p.triggers}</span>
+                        <span className="text-blue-600 text-sm font-bold w-6 text-right">{p.triggers}</span>
                       </div>
                     );
                   })}
@@ -485,7 +485,7 @@ const Dashboard: React.FC = () => {
               {connector_health.length === 0 ? (
                 <div className="py-4 text-center">
                   <p className="text-slate-500 text-sm mb-2">No connectors configured yet.</p>
-                  <Link href="/enterprise" className="text-xs text-indigo-600 hover:text-indigo-300">
+                  <Link href="/enterprise" className="text-xs text-blue-600 hover:text-blue-400">
                     Add your first connector →
                   </Link>
                 </div>
@@ -519,7 +519,7 @@ const Dashboard: React.FC = () => {
                 ].map(item => (
                   <Link key={item.label} href={item.href}>
                     <div className="bg-white border border-slate-200 rounded-lg p-3 text-center hover:border-gray-500 transition-colors">
-                      <div className="text-indigo-600 flex justify-center mb-1">
+                      <div className="text-blue-600 flex justify-center mb-1">
                         {React.cloneElement(item.icon as React.ReactElement, { className: "w-4 h-4" })}
                       </div>
                       <p className="text-slate-900 text-xl font-bold">{item.value}</p>
@@ -556,7 +556,7 @@ const Dashboard: React.FC = () => {
                   <div key={key} className="flex items-center gap-2 text-xs">
                     <span className="text-slate-400 flex-1 capitalize">{key.replace("_", " ")}</span>
                     <div className="w-16 bg-slate-100 rounded-full h-1">
-                      <div className="h-1 rounded-full bg-indigo-500" style={{ width: `${val}%` }} />
+                      <div className="h-1 rounded-full bg-blue-500" style={{ width: `${val}%` }} />
                     </div>
                     <span className="text-slate-500 w-8 text-right">{val}%</span>
                   </div>
@@ -571,7 +571,7 @@ const Dashboard: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
               {recommendations.map((r: any, i: number) => (
                 <Link key={i} href={r.href || "#"}>
-                  <div className="flex items-center gap-3 bg-white border border-slate-200 hover:border-indigo-700 hover:bg-indigo-900/10 rounded-xl px-4 py-3 transition-all cursor-pointer">
+                  <div className="flex items-center gap-3 bg-white border border-slate-200 hover:border-blue-200 hover:bg-indigo-900/10 rounded-xl px-4 py-3 transition-all cursor-pointer">
                     <div className={`w-2 h-2 rounded-full flex-shrink-0 ${PRIO_DOT[r.priority] || "bg-gray-500"}`} />
                     <span className="text-slate-700 text-sm flex-1">{r.action}</span>
                     <FiArrowRight className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
@@ -582,21 +582,21 @@ const Dashboard: React.FC = () => {
           </Card>
 
           {/* ── Row 10: AI Security Copilot ───────────────────── */}
-          <Card className="border-indigo-800/60 bg-indigo-950/20">
+          <Card className="border-blue-200/60 bg-indigo-950/20">
             <SectionHeader title="AI Security Copilot" icon={<FiMessageSquare className="w-4 h-4" />} />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <p className="text-xs text-indigo-600 uppercase font-semibold mb-2">Security Summary — Today</p>
+                <p className="text-xs text-blue-600 uppercase font-semibold mb-2">Security Summary — Today</p>
                 <ul className="space-y-1.5">
                   {ai_summary.summary.map((line: string, i: number) => (
                     <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
-                      <span className="text-indigo-500 mt-1 flex-shrink-0">•</span> {line}
+                      <span className="text-blue-500 mt-1 flex-shrink-0">•</span> {line}
                     </li>
                   ))}
                 </ul>
               </div>
               <div>
-                <p className="text-xs text-indigo-600 uppercase font-semibold mb-2">Recommended Actions</p>
+                <p className="text-xs text-blue-600 uppercase font-semibold mb-2">Recommended Actions</p>
                 <ul className="space-y-1.5">
                   {ai_summary.recommendations.map((line: string, i: number) => (
                     <li key={i} className="flex items-start gap-2 text-sm text-slate-600">

@@ -98,7 +98,7 @@ const PolicySimulator: React.FC = () => {
       <main className="min-h-screen py-8">
         <div className="max-w-4xl mx-auto px-4">
           <div className="mb-8 flex items-center gap-3">
-            <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center">
+            <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center">
               <FiZap className="w-5 h-5 text-slate-900" />
             </div>
             <div>
@@ -108,7 +108,7 @@ const PolicySimulator: React.FC = () => {
           </div>
 
           {error && (
-            <div className="bg-red-900/30 border border-red-700 text-red-300 rounded-xl px-4 py-3 text-sm mb-5 flex items-center gap-2">
+            <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm mb-5 flex items-center gap-2">
               <FiAlertTriangle className="w-4 h-4 flex-shrink-0" /> {error}
               <button onClick={() => setError(null)} className="ml-auto opacity-60 hover:opacity-100">✕</button>
             </div>
@@ -147,7 +147,7 @@ const PolicySimulator: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <input type="checkbox" id="customRules" checked={useCustomRules}
                       onChange={e => setUseCustomRules(e.target.checked)}
-                      className="rounded border-slate-300 bg-slate-100 text-indigo-600" />
+                      className="rounded border-slate-300 bg-slate-100 text-blue-600" />
                     <label htmlFor="customRules" className="text-sm text-slate-500 cursor-pointer">
                       Test custom rules (bypass stored policies)
                     </label>
@@ -161,7 +161,7 @@ const PolicySimulator: React.FC = () => {
                     </div>
                   )}
                   <button type="submit" disabled={!agentId || !assetId || testing}
-                    className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-slate-900 font-semibold rounded-lg text-sm transition flex items-center justify-center gap-2">
+                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-slate-900 font-semibold rounded-lg text-sm transition flex items-center justify-center gap-2">
                     {testing ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Running…</> : <><FiZap className="w-4 h-4" /> Run Simulation</>}
                   </button>
                 </form>

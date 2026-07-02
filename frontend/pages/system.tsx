@@ -54,8 +54,8 @@ const SystemHealth: React.FC = () => {
 
   const StatusBadge = ({ status }: { status: string }) => {
     const map: Record<string, string> = {
-      healthy:  "bg-green-900/40 text-green-600 border border-green-800",
-      degraded: "bg-red-900/40 text-red-600 border border-red-800",
+      healthy:  "bg-green-50 text-green-600 border border-green-800",
+      degraded: "bg-red-50 text-red-600 border border-red-800",
       unknown:  "bg-slate-100 text-slate-500 border border-slate-200",
     };
     return (
@@ -76,7 +76,7 @@ const SystemHealth: React.FC = () => {
 
           {/* Header */}
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center">
+            <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center">
               <FiServer className="w-5 h-5 text-slate-900" />
             </div>
             <div>
@@ -111,7 +111,7 @@ const SystemHealth: React.FC = () => {
           <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
             {loading ? (
               <div className="flex justify-center py-10">
-                <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
               </div>
             ) : (
               <div className="divide-y divide-slate-200">

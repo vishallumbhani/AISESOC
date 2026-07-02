@@ -113,7 +113,12 @@ export function StatusBadge({ status }: { status: StatusType }) {
   };
   const cls = map[status?.toLowerCase()] || tw.badgeGray;
   const ic  = icon[status?.toLowerCase()];
-  return <span className={cls}>{ic}{(status || "").replace(/_/g, " ")}</span>;
+  const label = (status || "").replace(/_/g, " ");
+  return (
+    <span className={`${cls} inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold h-5`}>
+      {ic}{label}
+    </span>
+  );
 }
 
 // ── 3. RiskBadge ───────────────────────────────────────────────
@@ -133,11 +138,12 @@ export function RiskBadge({ level, score }: { level: RiskLevel; score?: number }
   };
   const cls = map[level?.toLowerCase()] || map.minimal;
   const d   = dot[level?.toLowerCase()] || dot.minimal;
+  const levelLabel = level ? level.charAt(0).toUpperCase() + level.slice(1).toLowerCase() : "—";
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold ${cls}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${d}`} />
-      {level}
-      {score !== undefined && <span className="font-bold">· {score}</span>}
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold h-5 ${cls}`}>
+      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${d}`} />
+      {levelLabel}
+      {score !== undefined && <span className="opacity-70 font-medium">({score})</span>}
     </span>
   );
 }
@@ -177,7 +183,7 @@ export function PageHeader({ title, description, icon, breadcrumbs, actions }: P
           )}
           <div>
             <h1 className={tw.pageTitle}>{title}</h1>
-            {description && <p className="text-sm text-slate-500 mt-0.5">{description}</p>}
+            {description && <p className="text-sm text-slate-500 mt-1 max-w-3xl leading-relaxed">{description}</p>}
           </div>
         </div>
         {actions && <div className="flex items-center gap-2 flex-shrink-0">{actions}</div>}
@@ -504,6 +510,53 @@ interface BtnProps {
   type?:     "button" | "submit" | "reset";
   className?: string;
 }
+
+// ── RowMenu — ⋮ action menu for table rows ─────────────────────
+interface RowAction { label: string; icon?: React.ReactNode; onClick: () => void; danger?: boolean; }
+
+export function RowMenu({ actions }: { actions: RowAction[] }) {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative inline-block">
+      <button
+        onClick={e => { e.stopPropagation(); setOpen(!open); }}
+        className="w-7 h-7 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+        title="More actions"
+      >
+        <span className="text-base font-bold leading-none">⋮</span>
+      </button>
+      {open && (
+        <div className="absolute right-0 top-8 z-50 bg-white border border-slate-200 rounded-xl shadow-lg py-1 min-w-[160px]">
+          {actions.map((a, i) => (
+            <button
+              key={i}
+              onClick={e => { e.stopPropagation(); setOpen(false); a.onClick(); }}
+              className={`w-full text-left flex items-center gap-2.5 px-3.5 py-2 text-sm transition-colors ${
+                a.danger
+                  ? "text-red-600 hover:bg-red-50"
+                  : "text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              {a.icon && <span className="w-4 h-4 flex-shrink-0">{a.icon}</span>}
+              {a.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function Btn({ children, onClick, variant = "primary", size = "md", disabled, loading, icon, type = "button", className = "" }: BtnProps) {
   const base = variant === "primary" ? tw.btnPrimary : variant === "secondary" ? tw.btnSecondary : variant === "danger" ? tw.btnDanger : tw.btnGhost;
   const sz   = size === "sm" ? tw.btnSm : size === "lg" ? tw.btnLg : "";

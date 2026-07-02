@@ -42,8 +42,8 @@ const ACTION_COLORS: Record<string, string> = {
 };
 
 const DECISION_CLASSES: Record<string, string> = {
-  ALLOW: "bg-green-900/40 text-green-600 border border-green-800",
-  DENY:  "bg-red-900/40 text-red-600 border border-red-800",
+  ALLOW: "bg-green-50 text-green-600 border border-green-800",
+  DENY:  "bg-red-50 text-red-600 border border-red-800",
 };
 
 const AuditLogsPage: React.FC = () => {
@@ -134,7 +134,7 @@ const AuditLogsPage: React.FC = () => {
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center">
+              <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center">
                 <FiClipboard className="w-5 h-5 text-slate-900" />
               </div>
               <div>
@@ -148,7 +148,7 @@ const AuditLogsPage: React.FC = () => {
                 <FiRefreshCw className="w-4 h-4" /> Refresh
               </button>
               <button onClick={handleDownload} disabled={downloading}
-                className="flex items-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-slate-900 rounded-lg text-sm disabled:opacity-50">
+                className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-slate-900 rounded-lg text-sm disabled:opacity-50">
                 <FiDownload className="w-4 h-4" />
                 {downloading ? "Downloading…" : "Export CSV"}
               </button>
@@ -177,9 +177,9 @@ const AuditLogsPage: React.FC = () => {
                 <FiSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                 <input value={search} onChange={e => setSearch(e.target.value)}
                   placeholder="Search agent, asset, correlation…"
-                  className="pl-8 bg-white border border-slate-200 text-slate-700 placeholder-slate-400 rounded-lg px-3 py-1.5 text-sm w-56 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                  className="pl-8 bg-white border border-slate-200 text-slate-700 placeholder-slate-400 rounded-lg px-3 py-1.5 text-sm w-56 focus:outline-none focus:ring-1 focus:ring-blue-500" />
               </div>
-              <button type="submit" className="px-3 py-1.5 bg-indigo-600 text-slate-900 text-sm rounded-lg hover:bg-indigo-700">Search</button>
+              <button type="submit" className="px-3 py-1.5 bg-blue-600 text-slate-900 text-sm rounded-lg hover:bg-blue-700">Search</button>
             </form>
 
             <select value={actionFilter} onChange={e => setAction(e.target.value)}
@@ -215,7 +215,7 @@ const AuditLogsPage: React.FC = () => {
 
             {(actionFilter || decisionFilter || dateFrom || dateTo || search) && (
               <button onClick={() => { setAction(""); setDecision(""); setDateFrom(""); setDateTo(""); setSearch(""); }}
-                className="text-xs text-indigo-600 hover:text-indigo-300 flex items-center gap-1">
+                className="text-xs text-blue-600 hover:text-blue-500 flex items-center gap-1">
                 <FiX className="w-3 h-3" /> Clear filters
               </button>
             )}
@@ -223,7 +223,7 @@ const AuditLogsPage: React.FC = () => {
 
           {/* Error */}
           {error && (
-            <div className="bg-red-900/30 border border-red-700 text-red-300 rounded-xl px-4 py-3 text-sm mb-4 flex items-center gap-2">
+            <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm mb-4 flex items-center gap-2">
               <FiAlertTriangle className="w-4 h-4" /> {error}
             </div>
           )}
@@ -231,7 +231,7 @@ const AuditLogsPage: React.FC = () => {
           {/* Table */}
           {loading ? (
             <div className="flex justify-center py-16">
-              <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+              <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : filtered.length === 0 ? (
             <div className="bg-white border border-slate-200 rounded-xl p-12 text-center">

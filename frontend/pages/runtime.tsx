@@ -182,10 +182,12 @@ const RuntimePage: React.FC = () => {
             </div>
           ) : events.length === 0 ? (
             <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-              <FiActivity className="w-12 h-12 mx-auto mb-4 text-slate-700" />
-              <h3 className="text-gray-700 font-medium mb-1">No runtime events</h3>
-              <p className="text-slate-500 text-sm">
-                {decision || search ? "Try adjusting your filters." : "Configure a connector and run a decision to see events here."}
+              <FiActivity className="w-12 h-12 mx-auto mb-4 text-slate-200" />
+              <h3 className="text-slate-700 font-semibold mb-2">No runtime events found</h3>
+              <p className="text-slate-400 text-sm max-w-sm mx-auto">
+                {decision || search
+                  ? "No events match your current filters. Try adjusting the decision filter or clearing your search."
+                  : "Runtime events appear here as soon as a connected AI agent makes a request through the AI-SecOS decision endpoint. Check your connector API key is active and routing traffic."}
               </p>
             </div>
           ) : (

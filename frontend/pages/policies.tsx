@@ -38,7 +38,7 @@ function RuleReadable({ effect, agentName, assetName, actions }: {
       effect === "deny" ? "bg-red-900/20 border border-red-800" : "bg-green-900/20 border border-green-800"
     }`}>
       <span className={`font-black uppercase text-xs px-2 py-0.5 rounded ${
-        effect==="deny" ? "bg-red-900/60 text-red-300" : "bg-green-900/60 text-green-300"
+        effect==="deny" ? "bg-red-900/60 text-red-700" : "bg-green-900/60 text-green-700"
       }`}>{effect}</span>
       <span className="text-purple-300">🤖 {agentName || "?"}</span>
       <span className="text-slate-500">FROM ACCESSING</span>
@@ -53,7 +53,7 @@ function RuleReadable({ effect, agentName, assetName, actions }: {
 function ValidationPanel({ result, loading }: { result: any; loading: boolean }) {
   if (loading) return (
     <div className="flex items-center gap-2 text-slate-500 text-sm py-2">
-      <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+      <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
       Validating…
     </div>
   );
@@ -68,22 +68,22 @@ function ValidationPanel({ result, loading }: { result: any; loading: boolean })
     <div className="space-y-3">
       {/* Errors */}
       {result.errors.map((e: string, i: number) => (
-        <div key={i} className="flex items-start gap-2 bg-red-900/30 border border-red-700 rounded-lg px-3 py-2 text-sm text-red-300">
+        <div key={i} className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm text-red-700">
           <FiXCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-red-600" />{e}
         </div>
       ))}
 
       {/* Warnings */}
       {result.warnings.map((w: string, i: number) => (
-        <div key={i} className="flex items-start gap-2 bg-yellow-900/20 border border-yellow-700 rounded-lg px-3 py-2 text-sm text-yellow-300">
+        <div key={i} className="flex items-start gap-2 bg-yellow-900/20 border border-amber-200 rounded-lg px-3 py-2 text-sm text-yellow-300">
           <FiAlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-600" />{w}
         </div>
       ))}
 
       {/* Duplicates */}
       {result.duplicates.map((d: any, i: number) => (
-        <div key={i} className="bg-orange-900/20 border border-orange-700 rounded-lg px-3 py-2 text-sm">
-          <div className="flex items-center gap-2 text-orange-300 font-semibold mb-1">
+        <div key={i} className="bg-orange-900/20 border border-orange-200 rounded-lg px-3 py-2 text-sm">
+          <div className="flex items-center gap-2 text-orange-700 font-semibold mb-1">
             <FiAlertTriangle className="w-4 h-4" /> Duplicate Rule Detected
           </div>
           <p className="text-slate-600 text-xs">
@@ -95,8 +95,8 @@ function ValidationPanel({ result, loading }: { result: any; loading: boolean })
 
       {/* Conflicts */}
       {result.conflicts.map((c: any, i: number) => (
-        <div key={i} className="bg-red-900/20 border border-red-700 rounded-lg px-3 py-2 text-sm">
-          <div className="flex items-center gap-2 text-red-300 font-semibold mb-1">
+        <div key={i} className="bg-red-900/20 border border-red-200 rounded-lg px-3 py-2 text-sm">
+          <div className="flex items-center gap-2 text-red-700 font-semibold mb-1">
             <FiAlertTriangle className="w-4 h-4" /> Conflict Detected
           </div>
           <p className="text-slate-600 text-xs">
@@ -141,7 +141,7 @@ function ValidationPanel({ result, loading }: { result: any; loading: boolean })
       )}
 
       {!hasErrors && !hasWarnings && !hasDupes && !hasConflicts && (
-        <div className="flex items-center gap-2 bg-green-900/20 border border-green-700 rounded-lg px-3 py-2 text-sm text-green-300">
+        <div className="flex items-center gap-2 bg-green-900/20 border border-green-200 rounded-lg px-3 py-2 text-sm text-green-700">
           <FiCheckCircle className="w-4 h-4" /> No issues detected. Policy is safe to save.
         </div>
       )}
@@ -256,7 +256,7 @@ function PolicyBuilderModal({ policy, agents, assets, onClose, onSave }: {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
           <div className="flex items-center gap-3">
-            <FiShield className="w-5 h-5 text-indigo-600" />
+            <FiShield className="w-5 h-5 text-blue-600" />
             <h2 className="text-lg font-bold text-slate-900">
               {isNew ? "New Policy" : `Edit: ${policy!.name}`}
             </h2>
@@ -269,7 +269,7 @@ function PolicyBuilderModal({ policy, agents, assets, onClose, onSave }: {
                   {id:"advanced",icon:<FiCode className="w-3.5 h-3.5"/>,label:"JSON"}].map(m=>(
                   <button key={m.id} onClick={()=>setMode(m.id as any)}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                      mode===m.id ? "bg-indigo-600 text-slate-900" : "text-slate-500 hover:text-slate-900"
+                      mode===m.id ? "bg-blue-600 text-slate-900" : "text-slate-500 hover:text-slate-900"
                     }`}>
                     {m.icon}{m.label}
                   </button>
@@ -282,7 +282,7 @@ function PolicyBuilderModal({ policy, agents, assets, onClose, onSave }: {
 
         <div className="p-6">
           {error && (
-            <div className="mb-4 bg-red-900/30 border border-red-700 text-red-300 rounded-lg px-4 py-2 text-sm">{error}</div>
+            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-2 text-sm">{error}</div>
           )}
 
           {/* ── Step 1: Templates ── */}
@@ -291,10 +291,10 @@ function PolicyBuilderModal({ policy, agents, assets, onClose, onSave }: {
               <p className="text-slate-500 text-sm mb-4">Start from a template or build from scratch.</p>
               {TEMPLATES.map(t => (
                 <button key={t.id} onClick={() => applyTemplate(t)}
-                  className="w-full flex items-center gap-4 bg-white border border-slate-200 hover:border-indigo-500 rounded-xl p-4 text-left transition-colors group">
+                  className="w-full flex items-center gap-4 bg-white border border-slate-200 hover:border-blue-500 rounded-xl p-4 text-left transition-colors group">
                   <span className="text-3xl flex-shrink-0">{t.icon}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-slate-900 group-hover:text-indigo-300">{t.name}</p>
+                    <p className="font-semibold text-slate-900 group-hover:text-blue-500">{t.name}</p>
                     <p className="text-sm text-slate-500">{t.desc}</p>
                     <div className="flex gap-1 mt-1.5">
                       {t.actions.map(a => (
@@ -302,7 +302,7 @@ function PolicyBuilderModal({ policy, agents, assets, onClose, onSave }: {
                       ))}
                     </div>
                   </div>
-                  <FiChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-400 flex-shrink-0"/>
+                  <FiChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 flex-shrink-0"/>
                 </button>
               ))}
               <button onClick={() => setStep("form")}
@@ -437,7 +437,7 @@ function PolicyBuilderModal({ policy, agents, assets, onClose, onSave }: {
                                       ? [...r.actions, a]
                                       : r.actions.filter(x=>x!==a)
                                   }))}
-                                  className="rounded border-slate-300 bg-slate-100 text-indigo-500"/>
+                                  className="rounded border-slate-300 bg-slate-100 text-blue-500"/>
                                 <span className="text-sm text-slate-600 capitalize">{a}</span>
                               </label>
                             ))}
@@ -472,7 +472,7 @@ function PolicyBuilderModal({ policy, agents, assets, onClose, onSave }: {
                         : <span className="text-green-600 text-xs">✓ Valid JSON</span>}
                       <button type="button"
                         onClick={()=>{try{setJsonRules(JSON.stringify(JSON.parse(jsonRules),null,2));setJsonError(null);}catch{}}}
-                        className="text-xs text-indigo-600 border border-indigo-800 rounded px-2 py-0.5">Format</button>
+                        className="text-xs text-blue-600 border border-blue-200 rounded px-2 py-0.5">Format</button>
                     </div>
                   </div>
                   <textarea value={jsonRules} rows={12} spellCheck={false}
@@ -481,15 +481,15 @@ function PolicyBuilderModal({ policy, agents, assets, onClose, onSave }: {
                       try{JSON.parse(e.target.value);setJsonError(null);}
                       catch(err:any){setJsonError(err.message);}
                     }}
-                    className={`w-full bg-white text-green-300 font-mono text-xs px-4 py-3 rounded-xl border focus:outline-none resize-none leading-relaxed ${
-                      jsonError ? "border-red-700" : "border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
+                    className={`w-full bg-white text-green-700 font-mono text-xs px-4 py-3 rounded-xl border focus:outline-none resize-none leading-relaxed ${
+                      jsonError ? "border-red-200" : "border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
                     }`}/>
                 </div>
               )}
 
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={()=>setStep("validate")}
-                  className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-slate-900 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors">
+                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-slate-900 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors">
                   <FiZap className="w-4 h-4"/> Validate & Preview
                 </button>
                 {isNew && (
@@ -513,7 +513,7 @@ function PolicyBuilderModal({ policy, agents, assets, onClose, onSave }: {
                   ← Back to editor
                 </button>
                 <button type="button" onClick={runValidation}
-                  className="text-xs text-indigo-600 hover:text-indigo-300 ml-auto flex items-center gap-1">
+                  className="text-xs text-blue-600 hover:text-blue-500 ml-auto flex items-center gap-1">
                   <FiActivity className="w-3 h-3"/> Re-validate
                 </button>
               </div>
@@ -531,7 +531,7 @@ function PolicyBuilderModal({ policy, agents, assets, onClose, onSave }: {
                           assetName={r.assetId==="*" ? "All Assets" : assetName(r.assetId)}
                           actions={r.actions}/>
                       ))
-                    : <pre className="text-xs text-green-300 font-mono bg-slate-100 rounded-lg p-3 overflow-auto">{jsonRules}</pre>
+                    : <pre className="text-xs text-green-700 font-mono bg-slate-100 rounded-lg p-3 overflow-auto">{jsonRules}</pre>
                   }
                 </div>
               </div>
@@ -588,8 +588,8 @@ function DeleteSafetyModal({ policy, onClose, onConfirm }: {
           {loading ? <LoadingSpinner text="Checking impact…" /> : safety && (
             <>
               {!safety.safe_to_delete && (
-                <div className="bg-red-900/30 border border-red-700 rounded-xl p-4 space-y-3">
-                  <p className="text-red-300 font-semibold text-sm flex items-center gap-2">
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4 space-y-3">
+                  <p className="text-red-700 font-semibold text-sm flex items-center gap-2">
                     <FiAlertTriangle className="w-4 h-4"/> This policy has active history:
                   </p>
                   <div className="grid grid-cols-2 gap-3">
@@ -608,7 +608,7 @@ function DeleteSafetyModal({ policy, onClose, onConfirm }: {
                 </div>
               )}
               {safety.safe_to_delete && (
-                <div className="bg-green-900/20 border border-green-700 rounded-xl p-3 text-green-300 text-sm flex items-center gap-2">
+                <div className="bg-green-900/20 border border-green-200 rounded-xl p-3 text-green-700 text-sm flex items-center gap-2">
                   <FiCheckCircle className="w-4 h-4"/> No active matches or incidents. Safe to delete.
                 </div>
               )}
@@ -642,7 +642,7 @@ function VersionPanel({ policyId, policyName, onClose }: {
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 flex-shrink-0">
           <div>
             <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-              <FiGitCommit className="w-4 h-4 text-indigo-600"/> Version History
+              <FiGitCommit className="w-4 h-4 text-blue-600"/> Version History
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">{policyName}</p>
           </div>
@@ -750,7 +750,7 @@ const Policies: React.FC = () => {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
-                <FiShield className="w-7 h-7 text-indigo-600"/> Policies
+                <FiShield className="w-7 h-7 text-blue-600"/> Policies
               </h1>
               <p className="text-slate-500 text-sm mt-1">
                 {policies.length} policies · {policies.filter(p=>p.status==="active").length} active
@@ -772,8 +772,8 @@ const Policies: React.FC = () => {
           </div>
 
           {/* Priority info banner */}
-          <div className="flex items-start gap-2 bg-indigo-900/20 border border-indigo-800 rounded-xl px-4 py-3 mb-5 text-sm text-indigo-300">
-            <FiInfo className="w-4 h-4 flex-shrink-0 mt-0.5 text-indigo-600"/>
+          <div className="flex items-start gap-2 bg-indigo-900/20 border border-blue-200 rounded-xl px-4 py-3 mb-5 text-sm text-blue-500">
+            <FiInfo className="w-4 h-4 flex-shrink-0 mt-0.5 text-blue-600"/>
             <span>
               Policies are evaluated in <strong>priority order</strong> (lowest number first).
               <strong> DENY rules always win</strong> — if a deny matches, evaluation stops immediately.
@@ -783,7 +783,7 @@ const Policies: React.FC = () => {
 
           {loading ? <LoadingSpinner text="Loading…"/> : filtered.length===0 ? (
             <div className="bg-white border border-slate-200 rounded-xl p-8 text-center text-slate-400">
-              No policies found. <button onClick={()=>setModal("new")} className="text-indigo-600 ml-1 hover:underline">Create one →</button>
+              No policies yet. Without policies, all AI agent requests default to ALLOW. <button onClick={()=>setModal("new")} className="text-blue-600 ml-1 hover:underline font-medium">Create your first DENY policy →</button>
             </div>
           ) : (
             <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
@@ -799,7 +799,7 @@ const Policies: React.FC = () => {
                   {filtered.sort((a,b)=>a.priority-b.priority).map(p=>(
                     <tr key={p.id} className="hover:bg-slate-50">
                       <td className="px-4 py-3">
-                        <span className="font-mono text-sm font-bold text-indigo-600">{p.priority}</span>
+                        <span className="font-mono text-sm font-bold text-blue-600">{p.priority}</span>
                       </td>
                       <td className="px-4 py-3">
                         <p className="font-semibold text-slate-900">{p.name}</p>
@@ -817,11 +817,11 @@ const Policies: React.FC = () => {
                           <button onClick={()=>setModal(p)}
                             className="px-2 py-1 rounded text-slate-600 hover:bg-slate-200">Edit</button>
                           <button onClick={()=>setHistoryPolicy(p)}
-                            className="px-2 py-1 rounded text-indigo-600 hover:bg-indigo-900/40 flex items-center gap-1">
+                            className="px-2 py-1 rounded text-blue-600 hover:bg-blue-50 flex items-center gap-1">
                             <FiGitCommit className="w-3 h-3"/> History
                           </button>
                           <button onClick={()=>setDeletePolicy(p)}
-                            className="px-2 py-1 rounded text-red-600 hover:bg-red-900/40">Delete</button>
+                            className="px-2 py-1 rounded text-red-600 hover:bg-red-50">Delete</button>
                         </div>
                       </td>
                     </tr>

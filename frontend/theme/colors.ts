@@ -115,8 +115,8 @@ export const colors = {
 
 export const tw = {
   // Page
-  page:       "min-h-screen bg-[#f8fafc]",
-  pageInner:  "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6",
+  page:       "min-h-screen bg-slate-50",
+  pageInner:  "max-w-[1600px] mx-auto px-6 sm:px-8 py-6",
 
   // Cards
   card:       "bg-white border border-slate-200 rounded-xl shadow-sm",

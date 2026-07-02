@@ -411,6 +411,98 @@ const Reports: React.FC = () => {
             </div>
           )}
         </div>
+
+          {/* ── Report Templates ─────────────────────────── */}
+          <div className="mt-6">
+            <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-3">
+              Quick Report Templates
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+              {[
+                { name: "Executive Security Brief",    desc: "High-level risk summary for C-suite",      icon: "📊", color: "bg-blue-50 border-blue-200",    tag: "PDF / CSV" },
+                { name: "Compliance Evidence Pack",    desc: "SOC 2, ISO 27001, NIST, OWASP controls",  icon: "✅", color: "bg-green-50 border-green-200",   tag: "CSV" },
+                { name: "Incident Retrospective",      desc: "All incidents in period with CORR-IDs",    icon: "🚨", color: "bg-red-50 border-red-200",       tag: "CSV" },
+                { name: "Agent Activity Summary",      desc: "Per-agent request and denial statistics",  icon: "🤖", color: "bg-purple-50 border-purple-200", tag: "CSV" },
+              ].map((t, i) => (
+                <div key={i} className={`border rounded-xl p-4 ${t.color} cursor-pointer hover:shadow-sm transition-shadow`}>
+                  <div className="flex items-start justify-between mb-2">
+                    <span className="text-2xl">{t.icon}</span>
+                    <span className="text-[10px] font-semibold text-slate-500 bg-white border border-slate-200 px-1.5 py-0.5 rounded">{t.tag}</span>
+                  </div>
+                  <p className="text-sm font-semibold text-slate-800 mb-1">{t.name}</p>
+                  <p className="text-xs text-slate-500">{t.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Compliance Posture Strip ─────────────────── */}
+          <div className="mt-6 bg-white border border-slate-200 rounded-xl p-5">
+            <h2 className="text-sm font-semibold text-slate-700 mb-4">Live Compliance Posture</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { name: "SOC 2 Type II",  score: 100, color: "#16A34A" },
+                { name: "ISO 27001",       score: 100, color: "#16A34A" },
+                { name: "NIST AI RMF",     score: 100, color: "#16A34A" },
+                { name: "OWASP LLM",       score: 82,  color: "#D97706" },
+              ].map((fw) => (
+                <div key={fw.name} className="text-center">
+                  <div className="relative w-16 h-16 mx-auto mb-2">
+                    <svg viewBox="0 0 36 36" className="w-16 h-16 -rotate-90">
+                      <circle cx="18" cy="18" r="15" fill="none" stroke="#E2E8F0" strokeWidth="3" />
+                      <circle cx="18" cy="18" r="15" fill="none" stroke={fw.color} strokeWidth="3"
+                        strokeDasharray={`${fw.score * 0.942} 94.2`} strokeLinecap="round" />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-sm font-bold text-slate-900">{fw.score}%</span>
+                    </div>
+                  </div>
+                  <p className="text-xs font-medium text-slate-600">{fw.name}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Recent Exports ───────────────────────────── */}
+          <div className="mt-6 bg-white border border-slate-200 rounded-xl overflow-hidden">
+            <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-slate-700">Recent Exports</h2>
+              <span className="text-xs text-slate-400">Auto-clears after 30 days</span>
+            </div>
+            <table className="w-full text-xs">
+              <thead className="bg-slate-50">
+                <tr>
+                  {["Report", "Framework", "Period", "Generated", "Format", ""].map(h => (
+                    <th key={h} className="px-4 py-2.5 text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wide">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { name: "Executive Report",       fw: "All",          period: "30d", date: "Today 02:06",     fmt: "CSV"  },
+                  { name: "SOC 2 Evidence",          fw: "SOC 2 Type II",period: "30d", date: "Yesterday 18:42", fmt: "CSV"  },
+                  { name: "ISO 27001 Controls",      fw: "ISO 27001",    period: "90d", date: "Jun 28 09:15",    fmt: "CSV"  },
+                  { name: "NIST AI RMF Assessment",  fw: "NIST AI RMF",  period: "30d", date: "Jun 27 14:30",    fmt: "CSV"  },
+                ].map((r, i) => (
+                  <tr key={i} className="border-t border-slate-50 hover:bg-slate-50">
+                    <td className="px-4 py-3 font-medium text-slate-800">{r.name}</td>
+                    <td className="px-4 py-3 text-slate-500">{r.fw}</td>
+                    <td className="px-4 py-3 text-slate-500">{r.period}</td>
+                    <td className="px-4 py-3 text-slate-500">{r.date}</td>
+                    <td className="px-4 py-3">
+                      <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] font-medium">{r.fmt}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <button className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
+                        <FiDownload className="w-3 h-3" /> Re-export
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
       </main>
     </>
   );

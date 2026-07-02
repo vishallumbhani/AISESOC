@@ -47,7 +47,7 @@ const Settings: React.FC = () => {
       <main className="min-h-screen py-8">
         <div className="max-w-3xl mx-auto px-4">
           <div className="flex items-center gap-3 mb-6">
-            <FiSettings className="w-6 h-6 text-indigo-600"/>
+            <FiSettings className="w-6 h-6 text-blue-600"/>
             <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
           </div>
 
@@ -55,7 +55,7 @@ const Settings: React.FC = () => {
             {TABS.map(t => (
               <button key={t.id} onClick={() => setTab(t.id)}
                 className={`flex items-center gap-2 px-5 py-3 text-sm font-medium transition-colors ${
-                  tab === t.id ? "border-b-2 border-indigo-500 text-indigo-600" : "text-slate-400 hover:text-slate-900"
+                  tab === t.id ? "border-b-2 border-blue-500 text-blue-600" : "text-slate-400 hover:text-slate-900"
                 }`}>
                 {t.icon}{t.label}
               </button>
@@ -64,7 +64,7 @@ const Settings: React.FC = () => {
 
           {loading ? (
             <div className="flex justify-center py-20">
-              <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"/>
+              <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"/>
             </div>
           ) : (
             <>
@@ -114,7 +114,7 @@ const Settings: React.FC = () => {
                     </div>
                   </div>
                   <button type="submit" disabled={saving}
-                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-slate-900 font-semibold px-5 py-2.5 rounded-lg text-sm">
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-slate-900 font-semibold px-5 py-2.5 rounded-lg text-sm">
                     <FiSave className="w-4 h-4"/>{saving ? "Saving…" : "Save Changes"}
                   </button>
                 </form>
@@ -129,7 +129,7 @@ const Settings: React.FC = () => {
                         <p className="text-slate-900 font-medium">Password</p>
                         <p className="text-xs">Change your account password</p>
                       </div>
-                      <button className="text-indigo-600 hover:text-indigo-300 text-sm">Change →</button>
+                      <button className="text-blue-600 hover:text-blue-500 text-sm">Change →</button>
                     </div>
                     <div className="flex justify-between items-center py-3 border-b border-slate-200">
                       <div>
@@ -143,7 +143,7 @@ const Settings: React.FC = () => {
                         <p className="text-slate-900 font-medium">Active Sessions</p>
                         <p className="text-xs">Manage where you're logged in</p>
                       </div>
-                      <button className="text-red-600 hover:text-red-300 text-sm">Sign out all →</button>
+                      <button className="text-red-600 hover:text-red-700 text-sm">Sign out all →</button>
                     </div>
                   </div>
                 </div>
@@ -155,7 +155,7 @@ const Settings: React.FC = () => {
                   <p className="text-sm text-slate-500 mb-4">
                     Manage your personal API keys for integrations.
                   </p>
-                  <a href="/enterprise" className="text-indigo-600 hover:text-indigo-300 text-sm">
+                  <a href="/enterprise" className="text-blue-600 hover:text-blue-500 text-sm">
                     Manage API Keys in Enterprise Settings →
                   </a>
                 </div>
