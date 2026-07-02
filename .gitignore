@@ -40,3 +40,9 @@ frontend/node_modules/
 frontend/.next/
 **/__pycache__/
 frontend/.theme_backup*/
+# Deployment artifacts
+*.zip
+deploy_*.sh
+debug_*.sh
+frontend/.theme_backup*/
+frontend/convert_to_light.py
