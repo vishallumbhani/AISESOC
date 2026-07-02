@@ -36,3 +36,7 @@ Thumbs.db
 *.db
 *.bak
 *.db
+frontend/node_modules/
+frontend/.next/
+**/__pycache__/
+frontend/.theme_backup*/
