@@ -37,7 +37,6 @@ function Badge({ text, color }: { text: string; color: string }) {
 
 // ── Tabs — Reports removed (item 4), single Integration tab (item 3)
 const TABS = [
-  { id:"rbac",       label:"Roles & Users", icon:<FiUsers className="w-4 h-4"/> },
   { id:"apikeys",    label:"API Keys",      icon:<FiKey className="w-4 h-4"/> },
   { id:"connectors", label:"Connectors",    icon:<FiLink className="w-4 h-4"/> },
 ] as const;
@@ -500,7 +499,7 @@ function ConnectorsTab() {
 // ═══════════════════════════════════════════════════════════════
 const EnterprisePage: React.FC = () => {
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>("rbac");
+  const [tab, setTab] = useState<Tab>("apikeys");
 
   useEffect(() => {
     // Fix: was localStorage.getItem("token") — now uses getOrgToken()
@@ -523,21 +522,21 @@ const EnterprisePage: React.FC = () => {
               <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center">
                 <FiSettings className="w-5 h-5 text-white" />
               </div>
-              <h1 className="text-2xl font-bold text-slate-900">Enterprise Administration</h1>
+              <h1 className="text-2xl font-bold text-slate-900">API &amp; Connectors</h1>
             </div>
             <p className="text-slate-500 text-sm mt-0.5 ml-12">
-              Manage users, roles, connectors, and API keys for your organization.
+              Manage API keys for connector authentication and configure platform integrations.
             </p>
           </div>
 
           {/* Tab nav — clean light style */}
-          <div className="flex bg-white border border-slate-200 rounded-xl p-1 mb-6 gap-1 shadow-sm">
+          <div className="flex border-b border-[#D8D8D8] mb-5">
             {TABS.map(t => (
               <button key={t.id} onClick={() => setTab(t.id)}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center gap-2 px-5 py-2.5 text-sm font-medium transition-colors ${
                   tab === t.id
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                    ? "border-b-2 border-[#0572CE] text-[#0572CE]"
+                    : "border-b-2 border-transparent text-[#595959] hover:text-[#161616]"
                 }`}>
                 {t.icon}{t.label}
               </button>
@@ -545,7 +544,7 @@ const EnterprisePage: React.FC = () => {
           </div>
 
           {/* Tab content */}
-          {tab === "rbac"       && <RbacTab />}
+          
           {tab === "apikeys"    && <ApiKeysTab />}
           {tab === "connectors" && <ConnectorsTab />}
         </div>

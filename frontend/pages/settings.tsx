@@ -44,7 +44,7 @@ const Settings: React.FC = () => {
   return (
     <>
       <Head><title>Settings — AI-SecOS</title></Head>
-      <main className="min-h-screen py-8">
+      <main className="">
         <div className="max-w-3xl mx-auto px-4">
           <div className="flex items-center gap-3 mb-6">
             <FiSettings className="w-6 h-6 text-blue-600"/>
@@ -64,7 +64,7 @@ const Settings: React.FC = () => {
 
           {loading ? (
             <div className="flex justify-center py-20">
-              <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"/>
+              <div className="w-8 h-8 border-2 border-[#0572CE] border-t-transparent rounded-full animate-spin"/>
             </div>
           ) : (
             <>

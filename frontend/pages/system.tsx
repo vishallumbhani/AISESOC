@@ -71,12 +71,12 @@ const SystemHealth: React.FC = () => {
   return (
     <>
       <Head><title>System Health — AI-SecOS</title></Head>
-      <main className="min-h-screen py-8">
+      <main className="">
         <div className="max-w-2xl mx-auto px-4">
 
           {/* Header */}
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center">
+            <div className="w-7 h-7 bg-[#F0F8FF] rounded flex items-center justify-center">
               <FiServer className="w-5 h-5 text-slate-900" />
             </div>
             <div>
@@ -111,7 +111,7 @@ const SystemHealth: React.FC = () => {
           <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
             {loading ? (
               <div className="flex justify-center py-10">
-                <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                <div className="w-8 h-8 border-2 border-[#0572CE] border-t-transparent rounded-full animate-spin" />
               </div>
             ) : (
               <div className="divide-y divide-slate-200">

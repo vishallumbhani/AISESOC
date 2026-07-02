@@ -1,172 +1,150 @@
 /**
  * frontend/theme/colors.ts
- * AI-SecOS Enterprise Design System — Color Tokens
+ * AI-SecOS — Oracle Cloud Design Language
  *
- * NEVER hardcode colors in pages.
- * Import from here instead.
- *
- * Light theme is default.
- * CSS variables enable dark mode toggle without component rewrites.
+ * Faithfully reproduces Oracle Cloud Infrastructure's visual system:
+ * - Black top navbar
+ * - White left sidebar (no dark rails)
+ * - Light grey page background
+ * - Black primary buttons, white secondary
+ * - Clean sans-serif typography (no decorative elements)
+ * - Minimal borders, generous whitespace
  */
 
 export const colors = {
-  // ── Brand ──────────────────────────────────────────────────
   brand: {
-    primary:      "#2563eb",   // blue-600
-    primaryHover: "#1d4ed8",   // blue-700
-    primaryLight: "#eff6ff",   // blue-50
-    primaryBorder:"#bfdbfe",   // blue-200
-    logo:         "#1e40af",   // blue-800
+    primary:       "#C74634",   // Oracle red — used sparingly for logo/key accents
+    primaryHover:  "#A83929",
+    primaryLight:  "#FEF2F0",
+    primaryBorder: "#FECDC7",
+    navbarBg:      "#1A1A1A",   // Oracle top bar — near-black
+    navbarText:    "#FFFFFF",
   },
 
-  // ── Semantic Status ─────────────────────────────────────────
-  success:  { bg: "#f0fdf4", border: "#bbf7d0", text: "#15803d", icon: "#22c55e" },
-  warning:  { bg: "#fffbeb", border: "#fde68a", text: "#b45309", icon: "#f59e0b" },
-  danger:   { bg: "#fef2f2", border: "#fecaca", text: "#b91c1c", icon: "#ef4444" },
-  info:     { bg: "#eff6ff", border: "#bfdbfe", text: "#1d4ed8", icon: "#3b82f6" },
+  action: {
+    primary:       "#000000",   // Oracle black buttons
+    primaryHover:  "#333333",
+    primaryText:   "#FFFFFF",
+    secondary:     "#FFFFFF",
+    secondaryBorder: "#D0D0D0",
+    secondaryText: "#333333",
+    secondaryHover:"#F5F5F5",
+    danger:        "#C74634",
+    dangerHover:   "#A83929",
+    dangerText:    "#FFFFFF",
+    link:          "#0572CE",   // Oracle blue for links
+    linkHover:     "#0450A0",
+  },
 
-  // ── Risk Levels ─────────────────────────────────────────────
+  surface: {
+    page:          "#F5F5F5",   // Oracle page background — warm light grey
+    card:          "#FFFFFF",
+    sidebar:       "#FFFFFF",   // Oracle sidebar is white
+    navbar:        "#1A1A1A",
+    tableHeader:   "#F9F9F9",
+    tableRowHover: "#F5F7FA",
+    input:         "#FFFFFF",
+    modal:         "#FFFFFF",
+    overlay:       "rgba(0,0,0,0.5)",
+    tooltip:       "#333333",
+  },
+
+  border: {
+    default:       "#D8D8D8",
+    light:         "#EBEBEB",
+    focus:         "#0572CE",
+    sidebar:       "#E8E8E8",
+    navbar:        "#333333",
+    table:         "#E0E0E0",
+    input:         "#C0C0C0",
+    inputFocus:    "#0572CE",
+  },
+
+  text: {
+    primary:       "#161616",   // Oracle near-black text
+    secondary:     "#595959",
+    muted:         "#767676",
+    placeholder:   "#909090",
+    inverse:       "#FFFFFF",
+    link:          "#0572CE",
+    linkHover:     "#0450A0",
+    error:         "#C74634",
+    success:       "#1A7A4A",
+    warning:       "#7D4E00",
+  },
+
+  status: {
+    success:  { bg: "#F0FAF3", border: "#A3D9B1", text: "#1A7A4A", dot: "#2EAD5C" },
+    warning:  { bg: "#FFF8EC", border: "#FFD580", text: "#7D4E00", dot: "#F5A623" },
+    danger:   { bg: "#FFF0EE", border: "#FBADA0", text: "#C74634", dot: "#EF4444" },
+    info:     { bg: "#F0F8FF", border: "#90CAFF", text: "#0450A0", dot: "#0572CE" },
+    neutral:  { bg: "#F5F5F5", border: "#D8D8D8", text: "#595959", dot: "#909090" },
+  },
+
   risk: {
-    critical: { bg: "#fef2f2", border: "#fecaca", text: "#991b1b", badge: "#dc2626" },
-    high:     { bg: "#fff7ed", border: "#fed7aa", text: "#9a3412", badge: "#ea580c" },
-    medium:   { bg: "#fffbeb", border: "#fde68a", text: "#92400e", badge: "#d97706" },
-    low:      { bg: "#f0fdf4", border: "#bbf7d0", text: "#14532d", badge: "#16a34a" },
-    minimal:  { bg: "#f9fafb", border: "#e5e7eb", text: "#374151", badge: "#6b7280" },
-  },
-
-  // ── Neutrals ────────────────────────────────────────────────
-  gray: {
-    50:  "#f9fafb",
-    100: "#f3f4f6",
-    200: "#e5e7eb",
-    300: "#d1d5db",
-    400: "#9ca3af",
-    500: "#6b7280",
-    600: "#4b5563",
-    700: "#374151",
-    800: "#1f2937",
-    900: "#111827",
-    950: "#030712",
-  },
-
-  // ── Light Theme (default) ────────────────────────────────────
-  light: {
-    // Surfaces
-    pageBackground:   "#f8fafc",  // near-white with slight blue tint
-    cardBackground:   "#ffffff",
-    cardBorder:       "#e2e8f0",
-    sidebarBg:        "#ffffff",
-    sidebarBorder:    "#e2e8f0",
-    navbarBg:         "#ffffff",
-    navbarBorder:     "#e2e8f0",
-    tableBg:          "#ffffff",
-    tableHeaderBg:    "#f8fafc",
-    tableRowHover:    "#f1f5f9",
-    tableRowBorder:   "#e2e8f0",
-    inputBg:          "#ffffff",
-    inputBorder:      "#d1d5db",
-    inputFocus:       "#2563eb",
-    modalBg:          "#ffffff",
-    modalOverlay:     "rgba(15,23,42,0.5)",
-    // Text
-    textPrimary:      "#0f172a",
-    textSecondary:    "#475569",
-    textMuted:        "#94a3b8",
-    textPlaceholder:  "#94a3b8",
-    // Sidebar active
-    navActive:        "#eff6ff",
-    navActiveBorder:  "#2563eb",
-    navActiveText:    "#1d4ed8",
-    navHover:         "#f1f5f9",
-    navText:          "#475569",
-  },
-
-  // ── Dark Theme (optional) ────────────────────────────────────
-  dark: {
-    pageBackground:   "#0f172a",
-    cardBackground:   "#1e293b",
-    cardBorder:       "#334155",
-    sidebarBg:        "#0f172a",
-    sidebarBorder:    "#1e293b",
-    navbarBg:         "#0f172a",
-    navbarBorder:     "#1e293b",
-    tableBg:          "#1e293b",
-    tableHeaderBg:    "#0f172a",
-    tableRowHover:    "#334155",
-    tableRowBorder:   "#334155",
-    inputBg:          "#1e293b",
-    inputBorder:      "#334155",
-    inputFocus:       "#3b82f6",
-    modalBg:          "#1e293b",
-    modalOverlay:     "rgba(0,0,0,0.7)",
-    textPrimary:      "#f1f5f9",
-    textSecondary:    "#94a3b8",
-    textMuted:        "#475569",
-    textPlaceholder:  "#475569",
-    navActive:        "#1e3a5f",
-    navActiveBorder:  "#3b82f6",
-    navActiveText:    "#93c5fd",
-    navHover:         "#1e293b",
-    navText:          "#94a3b8",
+    critical: { bg: "#FFF0EE", border: "#FBADA0", text: "#C74634", badge: "#EF4444" },
+    high:     { bg: "#FFF5EE", border: "#FFD0A8", text: "#7D3800", badge: "#EA580C" },
+    medium:   { bg: "#FFF8EC", border: "#FFD580", text: "#7D4E00", badge: "#D97706" },
+    low:      { bg: "#F0FAF3", border: "#A3D9B1", text: "#1A7A4A", badge: "#22C55E" },
+    minimal:  { bg: "#F5F5F5", border: "#D8D8D8", text: "#595959", badge: "#909090" },
   },
 } as const;
 
-// ── Tailwind class helpers (use these in components) ──────────
-
+// ── Tailwind helpers ──────────────────────────────────────────
 export const tw = {
-  // Page
-  page:       "min-h-screen bg-slate-50",
-  pageInner:  "max-w-[1600px] mx-auto px-6 sm:px-8 py-6",
+  // Page layout — Oracle: grey page, no blue tint
+  page:      "min-h-screen bg-[#F5F5F5]",
+  pageInner: "max-w-[1600px] mx-auto px-6 py-6",
 
-  // Cards
-  card:       "bg-white border border-slate-200 rounded-xl shadow-sm",
+  // Cards — white on grey, clean 1px border
+  card:       "bg-white border border-[#D8D8D8] rounded-sm",
   cardPad:    "p-5",
   cardHeader: "flex items-center justify-between mb-4",
 
-  // Tables
-  table:      "w-full text-sm",
-  thead:      "bg-slate-50 border-b border-slate-200",
-  th:         "px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide",
-  td:         "px-4 py-3 text-slate-700",
-  tr:         "border-b border-slate-100 hover:bg-slate-50 transition-colors",
+  // Tables — Oracle style
+  table:    "w-full text-sm",
+  thead:    "bg-[#F9F9F9] border-b border-[#D8D8D8]",
+  th:       "px-4 py-2.5 text-left text-xs font-semibold text-[#595959] uppercase tracking-wide whitespace-nowrap",
+  td:       "px-4 py-3 text-[#161616] text-sm",
+  tr:       "border-b border-[#EBEBEB] hover:bg-[#F5F7FA] transition-colors",
 
   // Text
-  pageTitle:    "text-2xl font-bold text-slate-900",
-  sectionTitle: "text-lg font-semibold text-slate-800",
-  cardTitle:    "text-base font-semibold text-slate-800",
-  bodyText:     "text-sm text-slate-600",
-  mutedText:    "text-xs text-slate-400",
-  label:        "text-xs font-medium text-slate-500 uppercase tracking-wide",
+  pageTitle:    "text-2xl font-bold text-[#161616]",
+  sectionTitle: "text-lg font-semibold text-[#161616]",
+  cardTitle:    "text-sm font-semibold text-[#161616]",
+  bodyText:     "text-sm text-[#595959]",
+  mutedText:    "text-xs text-[#767676]",
+  label:        "text-xs font-medium text-[#595959] uppercase tracking-wide",
 
-  // Forms
-  input:        "w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition",
-  select:       "w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition",
-  textarea:     "w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition",
-  fieldLabel:   "block text-sm font-medium text-slate-700 mb-1.5",
-  fieldError:   "text-xs text-red-600 mt-1",
-  fieldHint:    "text-xs text-slate-400 mt-1",
+  // Forms — Oracle clean inputs
+  input:      "w-full bg-white border border-[#C0C0C0] rounded px-3 py-2 text-sm text-[#161616] placeholder-[#909090] focus:outline-none focus:ring-1 focus:ring-[#0572CE] focus:border-[#0572CE] transition",
+  select:     "w-full bg-white border border-[#C0C0C0] rounded px-3 py-2 text-sm text-[#161616] focus:outline-none focus:ring-1 focus:ring-[#0572CE] focus:border-[#0572CE] transition",
+  textarea:   "w-full bg-white border border-[#C0C0C0] rounded px-3 py-2 text-sm text-[#161616] placeholder-[#909090] focus:outline-none focus:ring-1 focus:ring-[#0572CE] focus:border-[#0572CE] resize-none transition",
+  fieldLabel: "block text-sm font-medium text-[#161616] mb-1",
+  fieldError: "text-xs text-[#C74634] mt-1",
+  fieldHint:  "text-xs text-[#767676] mt-1",
 
-  // Buttons
-  btnPrimary:   "inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1",
-  btnSecondary: "inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 font-medium px-4 py-2 rounded-lg text-sm border border-slate-300 transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1",
-  btnDanger:    "inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1",
-  btnGhost:     "inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-medium px-3 py-2 rounded-lg text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1",
-  btnIcon:      "inline-flex items-center justify-center w-8 h-8 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors",
+  // Buttons — Oracle: black primary, white secondary
+  btnPrimary:   "inline-flex items-center gap-2 bg-black hover:bg-[#333] text-white font-medium px-4 py-2 rounded text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-1",
+  btnSecondary: "inline-flex items-center gap-2 bg-white hover:bg-[#F5F5F5] text-[#333] font-medium px-4 py-2 rounded text-sm border border-[#D0D0D0] transition-colors disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-[#0572CE] focus:ring-offset-1",
+  btnDanger:    "inline-flex items-center gap-2 bg-[#C74634] hover:bg-[#A83929] text-white font-medium px-4 py-2 rounded text-sm transition-colors disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-[#C74634] focus:ring-offset-1",
+  btnGhost:     "inline-flex items-center gap-2 text-[#0572CE] hover:text-[#0450A0] hover:bg-[#F0F8FF] font-medium px-3 py-2 rounded text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-[#0572CE] focus:ring-offset-1",
+  btnIcon:      "inline-flex items-center justify-center w-8 h-8 text-[#595959] hover:text-[#161616] hover:bg-[#F5F5F5] rounded transition-colors",
   btnSm:        "px-3 py-1.5 text-xs",
   btnLg:        "px-6 py-2.5 text-base",
 
-  // Badges
-  badgeGreen:  "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200",
-  badgeAmber:  "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200",
-  badgeRed:    "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200",
-  badgeBlue:   "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200",
-  badgeGray:   "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200",
-  badgePurple: "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200",
+  // Badges — Oracle style, subtle and clean
+  badgeGreen:  "inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-[#F0FAF3] text-[#1A7A4A] border border-[#A3D9B1]",
+  badgeAmber:  "inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-[#FFF8EC] text-[#7D4E00] border border-[#FFD580]",
+  badgeRed:    "inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-[#FFF0EE] text-[#C74634] border border-[#FBADA0]",
+  badgeBlue:   "inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-[#F0F8FF] text-[#0450A0] border border-[#90CAFF]",
+  badgeGray:   "inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-[#F5F5F5] text-[#595959] border border-[#D8D8D8]",
+  badgePurple: "inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-[#F8F0FF] text-[#5E35B1] border border-[#C5B0E8]",
 
   // Dividers
-  divider:    "border-t border-slate-200",
-  dividerY:   "border-l border-slate-200",
+  divider:  "border-t border-[#EBEBEB]",
+  dividerY: "border-l border-[#EBEBEB]",
 
-  // Focus ring
-  focusRing:  "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1",
+  // Focus
+  focusRing: "focus:outline-none focus:ring-1 focus:ring-[#0572CE]",
 } as const;

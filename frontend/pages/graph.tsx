@@ -172,7 +172,7 @@ const GraphExplorer: React.FC = () => {
     <>
       <Head><title>Graph Explorer — AI-SecOS</title></Head>
 
-      <div className="flex flex-col overflow-hidden" style={{ height: "calc(100vh - 0px)", background: "#F8FAFC" }}>
+      <div className="flex flex-col overflow-hidden" style={{ height: "calc(100vh - 48px)", background: "#F8FAFC", margin: "-24px -28px -40px" }}>
 
         {/* ── Search bar — light ───────────────────────────────── */}
         <div className="flex items-center gap-3 px-4 py-2 flex-shrink-0 border-b border-slate-200 bg-white">

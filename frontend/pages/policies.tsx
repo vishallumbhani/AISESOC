@@ -745,8 +745,8 @@ const Policies: React.FC = () => {
           onConfirm={()=>handleDelete(deletePolicy)}/>
       )}
 
-      <main className="min-h-screen py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <main className="">
+        <div className="">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">

@@ -142,13 +142,13 @@ const Reports: React.FC = () => {
   return (
     <>
       <Head><title>Reports — AI-SecOS</title></Head>
-      <main className="min-h-screen" style={{ background: "#F8FAFC" }}>
+      <main className="" style={{ background: "#F8FAFC" }}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
           {/* Header */}
           <div className="flex items-center gap-3 mb-1">
-            <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center">
-              <FiBarChart2 className="w-5 h-5 text-white" />
+            <div className="w-7 h-7 bg-[#F0F8FF] rounded flex items-center justify-center">
+              <FiBarChart2 className="w-4 h-4 text-[#0572CE]" />
             </div>
             <h1 className="text-2xl font-bold text-slate-900">Reports</h1>
           </div>
@@ -271,7 +271,7 @@ const Reports: React.FC = () => {
             <div className="space-y-4">
               {loading ? (
                 <div className="flex justify-center py-20">
-                  <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"/>
+                  <div className="w-8 h-8 border-2 border-[#0572CE] border-t-transparent rounded-full animate-spin"/>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

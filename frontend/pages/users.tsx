@@ -37,6 +37,7 @@ const Users: React.FC = () => {
   const [editRole, setEditRole]   = useState("");
   const [form, setForm] = useState({ username: "", email: "", password: "", role: "security_analyst" });
   const [saving, setSaving] = useState(false);
+  const [roles, setRoles] = useState<any[]>([]);
 
   useEffect(() => {
     if (!getOrgToken()) { router.push("/login"); return; }
@@ -47,8 +48,12 @@ const Users: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const r = await orgApi.get("/auth/users");
-      setUsers(Array.isArray(r.data) ? r.data : []);
+      const [uRes, rRes] = await Promise.all([
+        orgApi.get("/auth/users"),
+        orgApi.get("/rbac/roles").catch(() => ({ data: [] })),
+      ]);
+      setUsers(Array.isArray(uRes.data) ? uRes.data : []);
+      setRoles(rRes.data?.roles || (Array.isArray(rRes.data) ? rRes.data : []));
     } catch (err: any) {
       const detail = err.response?.data?.detail;
       setError(
@@ -107,13 +112,13 @@ const Users: React.FC = () => {
   return (
     <>
       <Head><title>Users — AI-SecOS</title></Head>
-      <main className="min-h-screen py-8">
-        <div className="max-w-5xl mx-auto px-4">
+      <main className="">
+        <div className="">
 
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center">
+              <div className="w-7 h-7 bg-[#F0F8FF] rounded flex items-center justify-center">
                 <FiUsers className="w-5 h-5 text-slate-900" />
               </div>
               <div>
@@ -126,17 +131,16 @@ const Users: React.FC = () => {
             </div>
 
           {/* ── User Summary Cards ───────────────────── */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="oci-grid-4 mb-5">
             {[
-              { label: "Total Users",    value: users.length,                                   color: "text-blue-600",   bg: "bg-blue-50",   icon: "👥" },
-              { label: "Admin Users",    value: users.filter((u:any) => u.role === "admin").length, color: "text-purple-600", bg: "bg-purple-50", icon: "🔑" },
-              { label: "Active Today",   value: users.filter((u:any) => u.last_login_at).length, color: "text-green-600",  bg: "bg-green-50",  icon: "✅" },
-              { label: "Pending Invite", value: 0,                                               color: "text-amber-600",  bg: "bg-amber-50",  icon: "📨" },
+              { label: "Total Users",    value: users.length },
+              { label: "Admin Users",    value: users.filter((u:any) => u.role === "admin").length },
+              { label: "Active Today",   value: users.filter((u:any) => u.last_login_at).length },
+              { label: "Pending Invite", value: 0 },
             ].map((s, i) => (
-              <div key={i} className="bg-white border border-slate-200 rounded-xl p-4">
-                <div className={`w-9 h-9 ${s.bg} rounded-lg flex items-center justify-center text-lg mb-3`}>{s.icon}</div>
-                <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
-                <p className="text-xs text-slate-500 font-medium mt-0.5 uppercase tracking-wide">{s.label}</p>
+              <div key={i} className="oci-metric">
+                <div className="oci-metric-value">{s.value}</div>
+                <div className="oci-metric-label">{s.label}</div>
               </div>
             ))}
           </div>
@@ -223,7 +227,7 @@ const Users: React.FC = () => {
           {/* Users table */}
           {loading ? (
             <div className="flex justify-center py-20">
-              <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              <div className="w-8 h-8 border-2 border-[#0572CE] border-t-transparent rounded-full animate-spin" />
             </div>
           ) : (
             <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
@@ -308,6 +312,30 @@ const Users: React.FC = () => {
             </div>
           )}
         </div>
+
+          {/* ── System Roles ─────────────────────────────── */}
+          {roles.length > 0 && (
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-semibold text-[#161616]">System Roles ({roles.length})</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {roles.map((r: any) => (
+                  <div key={r.id} className="oci-card p-4">
+                    <div className="flex items-start justify-between mb-1.5">
+                      <p className="font-semibold text-[#161616] text-sm">{r.display_name || r.name}</p>
+                      {r.is_system && (
+                        <span className="oci-badge oci-badge-blue text-[10px]">System</span>
+                      )}
+                    </div>
+                    <p className="text-[#767676] text-xs mb-2 leading-relaxed">{r.description || "—"}</p>
+                    <p className="text-[#909090] text-xs">{r.permissions?.length || 0} permissions</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
       </main>
     </>
   );

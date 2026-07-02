@@ -41,7 +41,7 @@ const ACCENT_MAP = {
 export function MetricCard({ title, value, icon, trend, trendLabel, description, href, accent = "blue", loading }: MetricCardProps) {
   const a = ACCENT_MAP[accent];
   const card = (
-    <div className={`${tw.card} ${tw.cardPad} ${href ? "cursor-pointer hover:shadow-md transition-shadow" : ""} h-full`}>
+    <div className={`oci-metric ${href ? "cursor-pointer" : ""} h-full`} style={href ? {transition:"box-shadow 0.15s"} : {}}>
       <div className="flex items-start justify-between mb-3">
         <div className={`w-9 h-9 rounded-lg ${a.bg} flex items-center justify-center ${a.icon} flex-shrink-0`}>
           {loading ? <FiLoader className="w-4 h-4 animate-spin" /> : icon}
@@ -60,9 +60,9 @@ export function MetricCard({ title, value, icon, trend, trendLabel, description,
         </div>
       ) : (
         <>
-          <p className={`text-2xl font-bold ${a.value} leading-none`}>{value}</p>
-          <p className="text-xs text-slate-500 mt-1.5 font-medium">{title}</p>
-          {description && <p className="text-xs text-slate-400 mt-0.5">{description}</p>}
+          <p className="oci-metric-value">{value}</p>
+          <p className="oci-metric-label">{title}</p>
+          {description && <p className="oci-metric-desc">{description}</p>}
         </>
       )}
       {href && !loading && (
@@ -159,9 +159,9 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, description, icon, breadcrumbs, actions }: PageHeaderProps) {
   return (
-    <div className="mb-6">
+    <div className="oci-page-header">
       {breadcrumbs && breadcrumbs.length > 0 && (
-        <nav className="flex items-center gap-1.5 text-xs text-slate-400 mb-2">
+        <nav className="oci-breadcrumb">
           {breadcrumbs.map((b, i) => (
             <React.Fragment key={i}>
               {i > 0 && <span>/</span>}
@@ -183,7 +183,7 @@ export function PageHeader({ title, description, icon, breadcrumbs, actions }: P
           )}
           <div>
             <h1 className={tw.pageTitle}>{title}</h1>
-            {description && <p className="text-sm text-slate-500 mt-1 max-w-3xl leading-relaxed">{description}</p>}
+            {description && <p className="oci-page-desc">{description}</p>}
           </div>
         </div>
         {actions && <div className="flex items-center gap-2 flex-shrink-0">{actions}</div>}

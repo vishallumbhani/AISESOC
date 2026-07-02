@@ -224,9 +224,9 @@ const Dashboard: React.FC = () => {
   return (
     <>
       <Head><title>Dashboard — AI-SecOS Enterprise</title></Head>
-      <main className="min-h-screen pb-10">
+      <main>
         {/* Top bar */}
-        <div className="border-b border-slate-200 bg-white/80 backdrop-blur sticky top-0 z-20 px-6 py-2 flex items-center justify-between">
+        <div className="border border-[#E8E8E8] bg-white rounded px-4 py-2 flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
@@ -242,7 +242,7 @@ const Dashboard: React.FC = () => {
           </button>
         </div>
 
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 pt-5 space-y-4">
+        <div className="space-y-4">
 
           {/* ── Row 1: Enterprise Risk Score + KPI cards ──────── */}
           <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3">
